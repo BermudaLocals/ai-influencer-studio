@@ -1,0 +1,35 @@
+﻿version: '3.8'
+services:
+  storefront:
+    image: nginx:alpine
+    container_name: profithackai-storefront
+    ports:
+      - "8092:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./ai_studio.html:/usr/share/nginx/html/studio.html:ro
+    restart: unless-stopped
+  agent0-plr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profithackai-agent0
+    ports:
+      - "8093:5000"
+    env_file: .env
+    restart: unless-stopped
+  lead-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile.leads
+    container_name: profithackai-leads
+    ports:
+      - "8094:5001"
+    env_file: .env
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    container_name: profithackai-redis
+    ports:
+      - "6380:6379"
+    restart: unless-stopped
