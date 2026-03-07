@@ -1,14 +1,15 @@
-// AI Influencer Studio - Premium Pricing Tiers (GBP)
+// AI Influencer Studio - Premium Pricing Tiers
+// Multi-Currency Support: USD (USA) & GBP (UK)
 // Updated: March 2026
-// Currency: British Pounds (£)
 
 const PRICING_TIERS = {
   starter: {
     id: 'starter',
     name: 'Starter',
-    price: 149, // £149/month (was £49)
-    currency: 'GBP',
-    setupFee: 0,
+    pricing: {
+      USD: { price: 189, setupFee: 0, symbol: '$' },  // USA
+      GBP: { price: 149, setupFee: 0, symbol: '£' }   // UK
+    },
     features: {
       influencers: 1,
       postsPerDay: 3,
@@ -34,9 +35,10 @@ const PRICING_TIERS = {
   professional: {
     id: 'professional',
     name: 'Professional',
-    price: 297, // £297/month (was £197)
-    currency: 'GBP',
-    setupFee: 0,
+    pricing: {
+      USD: { price: 377, setupFee: 0, symbol: '$' },  // USA
+      GBP: { price: 297, setupFee: 0, symbol: '£' }   // UK
+    },
     features: {
       influencers: 5,
       postsPerDay: 9,
@@ -62,9 +64,10 @@ const PRICING_TIERS = {
   agency: {
     id: 'agency',
     name: 'Agency',
-    price: 597, // £597/month (was £497)
-    currency: 'GBP',
-    setupFee: 0,
+    pricing: {
+      USD: { price: 757, setupFee: 0, symbol: '$' },  // USA
+      GBP: { price: 597, setupFee: 0, symbol: '£' }   // UK
+    },
     features: {
       influencers: 20,
       postsPerDay: 'unlimited',
@@ -90,9 +93,10 @@ const PRICING_TIERS = {
   enterprise: {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 1097, // £1,097/month (was £997)
-    currency: 'GBP',
-    setupFee: 3500, // £3,500 setup (was £2,500)
+    pricing: {
+      USD: { price: 1393, setupFee: 4445, symbol: '$' },  // USA
+      GBP: { price: 1097, setupFee: 3500, symbol: '£' }   // UK
+    },
     features: {
       influencers: 'unlimited',
       postsPerDay: 'unlimited',
@@ -119,8 +123,23 @@ const PRICING_TIERS = {
   }
 };
 
-// Revenue calculations in GBP
-const calculateRevenue = (customers) => {
+// Get pricing for specific currency
+const getPricing = (tier, currency = 'USD') => {
+  const tierData = PRICING_TIERS[tier];
+  if (!tierData) return null;
+  
+  const pricing = tierData.pricing[currency] || tierData.pricing.USD;
+  return {
+    ...tierData,
+    price: pricing.price,
+    setupFee: pricing.setupFee,
+    currency: currency,
+    symbol: pricing.symbol
+  };
+};
+
+// Revenue calculations for both markets
+const calculateRevenue = (customers, currency = 'USD') => {
   const distribution = {
     starter: Math.floor(customers * 0.4),
     professional: Math.floor(customers * 0.4),
@@ -129,12 +148,12 @@ const calculateRevenue = (customers) => {
   };
   
   const monthly = 
-    (distribution.starter * PRICING_TIERS.starter.price) +
-    (distribution.professional * PRICING_TIERS.professional.price) +
-    (distribution.agency * PRICING_TIERS.agency.price) +
-    (distribution.enterprise * PRICING_TIERS.enterprise.price);
+    (distribution.starter * PRICING_TIERS.starter.pricing[currency].price) +
+    (distribution.professional * PRICING_TIERS.professional.pricing[currency].price) +
+    (distribution.agency * PRICING_TIERS.agency.pricing[currency].price) +
+    (distribution.enterprise * PRICING_TIERS.enterprise.pricing[currency].price);
   
-  const setupFees = distribution.enterprise * PRICING_TIERS.enterprise.setupFee;
+  const setupFees = distribution.enterprise * PRICING_TIERS.enterprise.pricing[currency].setupFee;
   
   return {
     monthly,
@@ -142,11 +161,20 @@ const calculateRevenue = (customers) => {
     setupFees,
     firstYear: (monthly * 12) + setupFees,
     distribution,
-    currency: 'GBP'
+    currency,
+    symbol: PRICING_TIERS.starter.pricing[currency].symbol
   };
+};
+
+// Detect currency from country code
+const detectCurrency = (countryCode) => {
+  const gbpCountries = ['GB', 'UK', 'IM', 'JE', 'GG']; // UK territories
+  return gbpCountries.includes(countryCode?.toUpperCase()) ? 'GBP' : 'USD';
 };
 
 module.exports = {
   PRICING_TIERS,
-  calculateRevenue
+  getPricing,
+  calculateRevenue,
+  detectCurrency
 };
