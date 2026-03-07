@@ -1,11 +1,13 @@
-// AI Influencer Studio - Premium Pricing Tiers
+// AI Influencer Studio - Premium Pricing Tiers (GBP)
 // Updated: March 2026
+// Currency: British Pounds (£)
 
 const PRICING_TIERS = {
   starter: {
     id: 'starter',
     name: 'Starter',
-    price: 149, // $149/month (was $49)
+    price: 149, // £149/month (was £49)
+    currency: 'GBP',
     setupFee: 0,
     features: {
       influencers: 1,
@@ -32,7 +34,8 @@ const PRICING_TIERS = {
   professional: {
     id: 'professional',
     name: 'Professional',
-    price: 297, // $297/month (was $197)
+    price: 297, // £297/month (was £197)
+    currency: 'GBP',
     setupFee: 0,
     features: {
       influencers: 5,
@@ -59,7 +62,8 @@ const PRICING_TIERS = {
   agency: {
     id: 'agency',
     name: 'Agency',
-    price: 597, // $597/month (was $497)
+    price: 597, // £597/month (was £497)
+    currency: 'GBP',
     setupFee: 0,
     features: {
       influencers: 20,
@@ -86,8 +90,9 @@ const PRICING_TIERS = {
   enterprise: {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 1097, // $1,097/month (was $997)
-    setupFee: 3500, // $3,500 setup (was $2,500)
+    price: 1097, // £1,097/month (was £997)
+    currency: 'GBP',
+    setupFee: 3500, // £3,500 setup (was £2,500)
     features: {
       influencers: 'unlimited',
       postsPerDay: 'unlimited',
@@ -114,7 +119,7 @@ const PRICING_TIERS = {
   }
 };
 
-// Revenue calculations
+// Revenue calculations in GBP
 const calculateRevenue = (customers) => {
   const distribution = {
     starter: Math.floor(customers * 0.4),
@@ -136,7 +141,8 @@ const calculateRevenue = (customers) => {
     annual: monthly * 12,
     setupFees,
     firstYear: (monthly * 12) + setupFees,
-    distribution
+    distribution,
+    currency: 'GBP'
   };
 };
 
