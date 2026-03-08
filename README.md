@@ -1,5 +1,5 @@
 # AI Influencer Studio 🤖🎬🎵
-## @mosthigh_flava | No Fluff, Max ROI
+## @creatorempire | No Fluff, Max ROI
 
 ---
 
@@ -50,9 +50,9 @@ NODE_ENV=production npm start
 - ⚙️ Settings — API keys, billing, team management
 
 ## SUBSCRIPTION PLANS
-- Starter: $29/mo
-- Pro: $97/mo
-- Agency: $297/mo
+- Starter: $149/mo
+- Pro: $297/mo
+- Agency: $597/mo
 
 ## TECH STACK
 Backend: Node.js + Express + PostgreSQL
