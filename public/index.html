@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Influencer Studio — Create, Generate, Earn</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #05050E;
+  --bg2: #0A0A1A;
+  --bg3: #111128;
+  --gold: #C9A84C;
+  --gold2: #E8C96A;
+  --gold-dim: rgba(201,168,76,0.15);
+  --green: #00E676;
+  --blue: #3B82F6;
+  --red: #F43F5E;
+  --purple: #A855F7;
+  --white: #EEE9E0;
+  --grey: #6B6B8A;
+  --border: rgba(255,255,255,0.06);
+  --radius: 12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:4px}
+
+/* ── LAYOUT ─────────────────────────────────────── */
+.app{display:grid;grid-template-columns:64px 220px 1fr 280px;grid-template-rows:56px 1fr;height:100vh;overflow:hidden}
+
+/* ── TOPBAR ──────────────────────────────────────── */
+.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px 0 8px;border-bottom:1px solid var(--border);background:rgba(5,5,14,.95);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.topbar-logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--gold);letter-spacing:1px}
+.topbar-logo span{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--grey);font-weight:400;letter-spacing:0}
+.topbar-center{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px}
+.tab-btn{padding:7px 18px;border:none;background:transparent;color:var(--grey);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:8px;transition:all .2s;white-space:nowrap}
+.tab-btn.active{background:var(--gold);color:#000}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.token-pill{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--gold-dim);border-radius:100px;padding:6px 14px;font-size:13px}
+.token-pill strong{color:var(--gold);font-size:15px}
+.btn-buy{background:var(--gold);color:#000;border:none;padding:8px 16px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-buy:hover{background:var(--gold2);transform:translateY(-1px)}
+
+/* ── ICON NAV ────────────────────────────────────── */
+.icon-nav{grid-row:2;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px}
+.icon-btn{width:44px;height:44px;border:none;background:transparent;border-radius:10px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative}
+.icon-btn:hover,.icon-btn.active{background:var(--gold-dim)}
+.icon-btn.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:24px;background:var(--gold);border-radius:0 3px 3px 0}
+.icon-sep{width:32px;height:1px;background:var(--border);margin:4px 0}
+
+/* ── TOOL SIDEBAR ────────────────────────────────── */
+.tool-sidebar{grid-row:2;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-head{padding:14px 14px 10px;border-bottom:1px solid var(--border)}
+.sidebar-search{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Syne',sans-serif;font-size:12px;outline:none}
+.sidebar-search:focus{border-color:var(--gold-dim)}
+.cat-pills{display:flex;flex-wrap:wrap;gap:4px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.cat-pill{padding:4px 10px;border:1px solid var(--border);border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--grey);font-family:'Syne',sans-serif;transition:all .2s}
+.cat-pill.active{background:var(--gold);color:#000;border-color:var(--gold)}
+.tool-list{overflow-y:auto;flex:1;padding:8px}
+.tool-item{display:flex;gap:10px;align-items:center;padding:10px 10px;border-radius:10px;cursor:pointer;border:1px solid transparent;transition:all .15s;margin-bottom:3px}
+.tool-item:hover{background:var(--bg3);border-color:var(--border)}
+.tool-item.active{background:var(--gold-dim);border-color:var(--gold)}
+.tool-icon{font-size:22px;flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:8px;border:1px solid var(--border)}
+.tool-info{flex:1;min-width:0}
+.tool-name{font-size:12px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:5px}
+.tool-desc{font-size:10px;color:var(--grey);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tool-cost{font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;text-align:right}
+.tool-cost .free{color:var(--green)}
+.badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;letter-spacing:.5px}
+
+/* ── MAIN WORKSPACE ──────────────────────────────── */
+.workspace{grid-row:2;overflow-y:auto;padding:28px;background:var(--bg)}
+.ws-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;gap:16px}
+.ws-empty-icon{font-size:56px;opacity:.3}
+.ws-empty h2{font-size:22px;color:var(--white);opacity:.5;font-weight:800}
+.ws-empty p{color:var(--grey);font-size:13px;max-width:340px;line-height:1.7}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;width:100%;max-width:420px}
+.quick-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .2s}
+.quick-card:hover{border-color:var(--gold-dim);transform:translateY(-2px)}
+.quick-card .qi{font-size:26px;margin-bottom:6px}
+.quick-card .ql{font-size:11px;color:var(--grey);font-weight:600}
+.quick-card .qc{font-size:10px;color:var(--gold);margin-top:2px}
+
+/* Tool workspace */
+.tool-ws{max-width:720px}
+.tool-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.tool-header-left{display:flex;gap:14px;align-items:center}
+.tool-header-icon{font-size:42px;width:64px;height:64px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tool-title{font-size:22px;font-weight:800;color:var(--white);margin-bottom:4px}
+.tool-subtitle{font-size:13px;color:var(--grey);line-height:1.6;max-width:420px}
+.tool-meta{text-align:right;flex-shrink:0}
+.cost-big{font-family:'IBM Plex Mono',monospace;font-size:28px;color:var(--gold);font-weight:500}
+.cost-free{color:var(--green)}
+.cost-time{font-size:11px;color:var(--grey);margin-top:4px;font-family:'IBM Plex Mono',monospace}
+.cost-balance{font-size:11px;color:var(--grey);margin-top:2px}
+.cost-balance.warn{color:var(--red)}
+
+/* Form fields */
+.field{margin-bottom:20px}
+.field-label{display:block;font-size:11px;font-weight:700;color:var(--grey);margin-bottom:7px;letter-spacing:.5px;text-transform:uppercase}
+.field-input{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border-color .2s;resize:none}
+.field-input:focus{border-color:rgba(201,168,76,.4)}
+.field-input::placeholder{color:var(--grey)}
+.chip-group{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:7px 14px;border:1px solid var(--border);border-radius:100px;font-size:12px;cursor:pointer;background:transparent;color:var(--grey);font-family:'Syne',sans-serif;font-weight:600;transition:all .2s}
+.chip:hover{border-color:var(--gold-dim);color:var(--white)}
+.chip.selected{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.select-row{display:grid;gap:8px}
+.select-row.cols-2{grid-template-columns:1fr 1fr}
+.select-row.cols-3{grid-template-columns:1fr 1fr 1fr}
+.select-row.cols-5{grid-template-columns:repeat(5,1fr)}
+.sel-chip{padding:10px 8px;border:1px solid var(--border);border-radius:10px;font-size:12px;cursor:pointer;background:var(--bg2);color:var(--grey);font-family:'Syne',sans-serif;font-weight:700;text-align:center;transition:all .2s}
+.sel-chip:hover{border-color:var(--gold-dim)}
+.sel-chip.selected{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.sel-chip .si{font-size:18px;display:block;margin-bottom:4px}
+.range-row{display:flex;align-items:center;gap:12px}
+.range-row input[type=range]{flex:1;accent-color:var(--gold)}
+.range-val{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--gold);min-width:36px;text-align:right}
+.upload-zone{border:1px dashed rgba(201,168,76,.3);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg2)}
+.upload-zone:hover{border-color:var(--gold);background:var(--gold-dim)}
+.upload-zone .uz-icon{font-size:32px;margin-bottom:8px}
+.upload-zone .uz-text{font-size:13px;color:var(--grey)}
+.upload-zone .uz-sub{font-size:11px;color:var(--grey);opacity:.6;margin-top:4px}
+
+/* Generate button */
+.gen-btn{width:100%;padding:17px;background:var(--gold);color:#000;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:all .2s;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px}
+.gen-btn:hover{background:var(--gold2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(201,168,76,.3)}
+.gen-btn:disabled{background:#2a2a3a;color:var(--grey);cursor:not-allowed;transform:none;box-shadow:none}
+.gen-btn .spinner{width:18px;height:18px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Result */
+.result-box{margin-top:20px;background:var(--bg2);border:1px solid rgba(0,230,118,.2);border-radius:14px;padding:20px}
+.result-head{display:flex;align-items:center;gap:8px;color:var(--green);font-weight:700;font-size:14px;margin-bottom:14px}
+.result-preview{background:var(--bg);border-radius:10px;height:80px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px}
+.result-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-sm{padding:8px 14px;border-radius:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--white);transition:all .2s}
+.btn-sm:hover{border-color:var(--gold-dim);color:var(--gold)}
+.btn-sm.primary{background:var(--gold);color:#000;border-color:var(--gold)}
+.btn-sm.primary:hover{background:var(--gold2)}
+
+/* ── RIGHT PANEL ─────────────────────────────────── */
+.right-panel{grid-row:2;background:var(--bg2);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.rp-section{padding:16px;border-bottom:1px solid var(--border)}
+.rp-title{font-size:11px;font-weight:800;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.token-meter{background:var(--bg);border-radius:10px;padding:14px;border:1px solid var(--gold-dim);margin-bottom:10px}
+.token-count{font-family:'IBM Plex Mono',monospace;font-size:32px;color:var(--gold);line-height:1}
+.token-sub{font-size:11px;color:var(--grey);margin-top:2px}
+.token-bar{height:5px;background:var(--bg3);border-radius:100px;margin-top:10px;overflow:hidden}
+.token-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:100px;transition:width .5s}
+.btn-full{width:100%;padding:11px;background:var(--gold);color:#000;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;cursor:pointer;margin-top:8px;transition:all .2s}
+.btn-full:hover{background:var(--gold2)}
+.btn-full.ghost{background:transparent;color:var(--grey);border:1px solid var(--border)}
+.btn-full.ghost:hover{border-color:var(--gold-dim);color:var(--gold)}
+.recent-item{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.recent-item:last-child{border-bottom:none}
+.recent-thumb{width:38px;height:38px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.recent-info{flex:1;min-width:0}
+.recent-name{font-size:12px;font-weight:600;color:var(--white)}
+.recent-meta{font-size:10px;color:var(--grey);margin-top:2px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.workflow-card{background:var(--bg);border:1px solid rgba(0,230,118,.15);border-radius:10px;padding:14px}
+.workflow-steps{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.wf-step{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg2);border-radius:7px;font-size:11px;color:var(--grey);border:1px solid var(--border)}
+.wf-step .ws-icon{font-size:14px}
+.wf-arrow{text-align:center;color:rgba(0,230,118,.4);font-size:12px}
+
+/* ── TOKENS MODAL ────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:32px}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px}
+.modal-title{font-size:22px;font-weight:800;color:var(--white)}
+.modal-sub{font-size:13px;color:var(--grey);margin-top:4px}
+.btn-close{background:var(--bg);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;cursor:pointer;color:var(--grey);font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.btn-close:hover{border-color:var(--gold-dim);color:var(--gold)}
+.pack-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.pack-card{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;position:relative;transition:all .2s}
+.pack-card:hover{border-color:rgba(201,168,76,.3)}
+.pack-card.selected{border-color:var(--gold);background:var(--gold-dim)}
+.pack-card.popular{border-color:rgba(201,168,76,.4)}
+.pack-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;font-size:10px;font-weight:800;padding:3px 12px;border-radius:100px;white-space:nowrap}
+.pack-tokens{font-family:'IBM Plex Mono',monospace;font-size:26px;color:var(--gold);line-height:1}
+.pack-bonus{font-size:11px;color:var(--green);margin-top:3px;font-weight:600}
+.pack-name{font-size:12px;color:var(--grey);margin-top:6px}
+.pack-price{font-size:24px;font-weight:800;color:var(--white);margin-top:8px}
+.pack-per{font-size:11px;color:var(--grey);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.pay-methods{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+.pay-btn{padding:12px 8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;transition:all .2s;font-family:'Syne',sans-serif}
+.pay-btn:hover{border-color:var(--gold-dim)}
+.pay-btn.selected{border-color:var(--gold);background:var(--gold-dim)}
+.pay-icon{font-size:22px;margin-bottom:4px}
+.pay-name{font-size:11px;color:var(--grey);font-weight:600}
+.how-tokens{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:20px}
+.how-title{font-size:11px;font-weight:800;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.how-item{text-align:center;padding:10px 6px;background:var(--bg2);border-radius:8px}
+.how-icon{font-size:18px;margin-bottom:4px}
+.how-label{font-size:10px;color:var(--grey);font-weight:600}
+.how-cost{font-size:11px;color:var(--gold);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.monthly-plan{background:linear-gradient(135deg,var(--bg),var(--bg3));border:1px solid var(--gold-dim);border-radius:14px;padding:18px;display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:8px}
+
+/* ── MARKETPLACE PAGE ────────────────────────────── */
+.page-wrap{padding:28px;overflow-y:auto;grid-column:2/-1;grid-row:2}
+.page-header{margin-bottom:28px}
+.page-title{font-size:26px;font-weight:800;color:var(--white);margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--grey);max-width:560px;line-height:1.6}
+.stats-bar{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}
+.stat-chip{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;min-width:120px}
+.stat-val{font-size:22px;font-weight:800;color:var(--gold)}
+.stat-lbl{font-size:11px;color:var(--grey);margin-top:2px}
+.app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.app-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .2s;cursor:pointer}
+.app-card:hover{border-color:rgba(201,168,76,.3);transform:translateY(-3px)}
+.app-card.expanded{border-color:var(--gold)}
+.app-card-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.app-logo{font-size:34px;width:54px;height:54px;background:var(--bg);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.app-card-info{flex:1}
+.app-card-name{font-size:15px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:6px}
+.app-card-dev{font-size:11px;color:var(--grey);margin-top:2px}
+.app-card-desc{font-size:12px;color:var(--grey);line-height:1.6;margin-bottom:12px}
+.app-caps{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.cap{font-size:10px;padding:3px 8px;background:var(--bg);border:1px solid var(--border);border-radius:100px;color:var(--grey)}
+.app-card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)}
+.app-price{font-size:14px;font-weight:700;color:var(--gold);font-family:'IBM Plex Mono',monospace}
+.app-rating{font-size:12px;color:var(--grey)}
+.install-btn{padding:7px 14px;border-radius:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;border:1px solid var(--gold);background:transparent;color:var(--gold)}
+.install-btn.installed{background:rgba(0,230,118,.1);border-color:var(--green);color:var(--green)}
+.app-expand{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.expand-sub{font-size:11px;font-weight:800;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;margin-top:12px}
+
+/* ── AI AGENTS PAGE ──────────────────────────────── */
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.agent-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .2s}
+.agent-card:hover{border-color:rgba(201,168,76,.3);transform:translateY(-2px)}
+.agent-avatar{font-size:40px;margin-bottom:12px}
+.agent-name{font-size:16px;font-weight:800;color:var(--white);margin-bottom:4px}
+.agent-role{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+.agent-desc{font-size:12px;color:var(--grey);line-height:1.6;margin-bottom:14px}
+.agent-tasks{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
+.agent-task{font-size:10px;padding:3px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--grey)}
+.agent-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);margin-bottom:12px}
+.status-active{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,230,118,.4)}50%{opacity:.8;box-shadow:0 0 0 6px rgba(0,230,118,0)}}
+.activate-btn{width:100%;padding:10px;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s;border:1px solid var(--gold);background:transparent;color:var(--gold)}
+.activate-btn.active{background:var(--gold);color:#000;border-color:var(--gold)}
+
+/* ── SECTION VISIBILITY ──────────────────────────── */
+.section{display:none}
+.section.visible{display:block}
+.page-section{display:none}
+.page-section.visible{display:grid}
+
+/* animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp .3s ease both}
+
+@media(max-width:900px){
+  .app{grid-template-columns:0 0 1fr 0;grid-template-rows:56px 1fr}
+  .icon-nav,.tool-sidebar,.right-panel{display:none}
+  .workspace,.page-wrap{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      💎 <span>AI INFLUENCER STUDIO</span>
+    </div>
+    <div class="topbar-center">
+      <button class="tab-btn active" onclick="showPage('studio')">🛠️ Studio</button>
+      <button class="tab-btn" onclick="showPage('marketplace')">🛒 Marketplace</button>
+      <button class="tab-btn" onclick="showPage('agents')">⚡ AI Agents</button>
+      <button class="tab-btn" onclick="showPage('workflows')">🔗 Workflows</button>
+    </div>
+    <div class="topbar-right">
+      <div class="token-pill">🪙 <strong id="tokenCount">247</strong> <span>tokens</span></div>
+      <button class="btn-buy" onclick="openTokenModal()">+ Buy Tokens</button>
+    </div>
+  </header>
+
+  <!-- ── ICON NAV ── -->
+  <nav class="icon-nav" id="iconNav">
+    <button class="icon-btn active" title="Video" onclick="filterCat('video')">🎬</button>
+    <button class="icon-btn" title="Avatar" onclick="filterCat('avatar')">🤖</button>
+    <button class="icon-btn" title="Music" onclick="filterCat('music')">🎵</button>
+    <button class="icon-btn" title="Voice" onclick="filterCat('voice')">🎙️</button>
+    <button class="icon-btn" title="Image" onclick="filterCat('image')">🎨</button>
+    <div class="icon-sep"></div>
+    <button class="icon-btn" title="Scripts & Captions" onclick="filterCat('content')">📝</button>
+    <button class="icon-btn" title="Translation" onclick="filterCat('translate')">🌍</button>
+    <button class="icon-btn" title="Analytics" onclick="filterCat('analytics')">📊</button>
+  </nav>
+
+  <!-- ── TOOL SIDEBAR ── -->
+  <aside class="tool-sidebar" id="toolSidebar">
+    <div class="sidebar-head">
+      <input class="sidebar-search" id="toolSearch" placeholder="🔍 Search tools..." oninput="filterTools()" />
+    </div>
+    <div class="cat-pills" id="catPills">
+      <button class="cat-pill active" onclick="filterCat('all')">All</button>
+      <button class="cat-pill" onclick="filterCat('video')">Video</button>
+      <button class="cat-pill" onclick="filterCat('avatar')">Avatar</button>
+      <button class="cat-pill" onclick="filterCat('music')">Music</button>
+      <button class="cat-pill" onclick="filterCat('voice')">Voice</button>
+      <button class="cat-pill" onclick="filterCat('image')">Image</button>
+      <button class="cat-pill" onclick="filterCat('content')">Content</button>
+      <button class="cat-pill" onclick="filterCat('translate')">Translate</button>
+    </div>
+    <div class="tool-list" id="toolList"></div>
+  </aside>
+
+  <!-- ── MAIN WORKSPACE ── -->
+  <main class="workspace" id="studioPage">
+    <div class="ws-empty fade-in" id="emptyState">
+      <div class="ws-empty-icon">🛠️</div>
+      <h2>Pick a tool. Click generate.</h2>
+      <p>Select any tool from the sidebar. Fill in your details. Hit Generate. No skills needed.</p>
+      <div class="quick-grid">
+        <div class="quick-card" onclick="openTool('text_to_video')"><div class="qi">🎬</div><div class="ql">Text → Video</div><div class="qc">8 🪙</div></div>
+        <div class="quick-card" onclick="openTool('talking_avatar')"><div class="qi">🤖</div><div class="ql">Talking Avatar</div><div class="qc">10 🪙</div></div>
+        <div class="quick-card" onclick="openTool('text_to_song')"><div class="qi">🎵</div><div class="ql">Text → Song</div><div class="qc">5 🪙</div></div>
+        <div class="quick-card" onclick="openTool('clone_voice')"><div class="qi">🎙️</div><div class="ql">Clone Voice</div><div class="qc">20 🪙</div></div>
+        <div class="quick-card" onclick="openTool('video_translate')"><div class="qi">🌍</div><div class="ql">Translate Video</div><div class="qc">8 🪙</div></div>
+        <div class="quick-card" onclick="openTool('script_writer')"><div class="qi">📝</div><div class="ql">Script Writer</div><div class="qc">FREE</div></div>
+      </div>
+    </div>
+    <div class="tool-ws fade-in" id="toolWorkspace" style="display:none"></div>
+  </main>
+
+  <!-- ── RIGHT PANEL ── -->
+  <aside class="right-panel" id="rightPanel">
+    <div class="rp-section">
+      <div class="rp-title">Token Balance</div>
+      <div class="token-meter">
+        <div class="token-count" id="rpTokenCount">247</div>
+        <div class="token-sub">tokens remaining</div>
+        <div class="token-bar"><div class="token-fill" id="tokenFill" style="width:49%"></div></div>
+      </div>
+      <button class="btn-full" onclick="openTokenModal()">+ Buy Tokens</button>
+      <button class="btn-full ghost" style="margin-top:6px" onclick="openTokenModal()">Monthly Plan — £39/mo</button>
+    </div>
+    <div class="rp-section">
+      <div class="rp-title">Recent Outputs</div>
+      <div class="recent-item"><div class="recent-thumb">🎬</div><div class="recent-info"><div class="recent-name">Text → Video</div><div class="recent-meta">Luna AI · 2 min ago</div></div><div class="status-dot"></div></div>
+      <div class="recent-item"><div class="recent-thumb">🎵</div><div class="recent-info"><div class="recent-name">Text → Song</div><div class="recent-meta">Rio Music · 8 min ago</div></div><div class="status-dot"></div></div>
+      <div class="recent-item"><div class="recent-thumb">🤖</div><div class="recent-info"><div class="recent-name">Talking Avatar</div><div class="recent-meta">Sienna Gold · 14 min ago</div></div><div class="status-dot"></div></div>
+      <div class="recent-item"><div class="recent-thumb">🎨</div><div class="recent-info"><div class="recent-name">Creator Image</div><div class="recent-meta">Luna AI · 22 min ago</div></div><div class="status-dot"></div></div>
+    </div>
+    <div class="rp-section">
+      <div class="rp-title">Active Workflow</div>
+      <div class="workflow-card">
+        <div style="font-size:12px;color:var(--green);font-weight:700">🔗 Daily Content Loop</div>
+        <div class="workflow-steps">
+          <div class="wf-step"><span class="ws-icon">📝</span> Script Writer</div>
+          <div class="wf-arrow">↓</div>
+          <div class="wf-step"><span class="ws-icon">🤖</span> Talking Avatar</div>
+          <div class="wf-arrow">↓</div>
+          <div class="wf-step"><span class="ws-icon">🎵</span> Background Music</div>
+          <div class="wf-arrow">↓</div>
+          <div class="wf-step"><span class="ws-icon">📤</span> Auto-Post</div>
+        </div>
+        <button class="btn-full" style="margin-top:10px;font-size:11px;padding:8px">▶ Run Now (FREE)</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MARKETPLACE PAGE ── -->
+  <div class="page-section" id="marketplacePage" style="padding:28px;overflow-y:auto;grid-column:2/-1;grid-row:2;display:none">
+    <div class="page-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="page-title">🛒 App Marketplace</div>
+          <div class="page-sub">Connect Kling, HeyGen, Mureka, ElevenLabs and more. You pay per use — charged to your token balance. Developers earn 80%, GLOWX takes 20%.</div>
+        </div>
+        <button class="btn-buy" onclick="showDevForm()">⚙️ Submit Your App</button>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-chip"><div class="stat-val">12</div><div class="stat-lbl">Apps Available</div></div>
+      <div class="stat-chip"><div class="stat-val" id="installedCount">2</div><div class="stat-lbl">Installed</div></div>
+      <div class="stat-chip"><div class="stat-val">20%</div><div class="stat-lbl">GLOWX Revenue Share</div></div>
+      <div class="stat-chip"><div class="stat-val">80%</div><div class="stat-lbl">Developer Earnings</div></div>
+    </div>
+    <div class="app-grid" id="appGrid"></div>
+  </div>
+
+  <!-- ── AI AGENTS PAGE ── -->
+  <div class="page-section" id="agentsPage" style="padding:28px;overflow-y:auto;grid-column:2/-1;grid-row:2;display:none">
+    <div class="page-header">
+      <div class="page-title">⚡ AI Agent Team</div>
+      <div class="page-sub">Your 24/7 AI employees. Each agent handles a specific role automatically — activate them and they work while you sleep.</div>
+    </div>
+    <div class="agents-grid" id="agentsGrid"></div>
+  </div>
+
+  <!-- ── WORKFLOWS PAGE ── -->
+  <div class="page-section" id="workflowsPage" style="padding:28px;overflow-y:auto;grid-column:2/-1;grid-row:2;display:none">
+    <div class="page-header">
+      <div class="page-title">🔗 Workflow Builder</div>
+      <div class="page-sub">Chain tools together like Hypernatural. Script → Avatar → Music → Post. Build once, run forever. All workflows run FREE.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px" id="workflowGrid"></div>
+  </div>
+
+</div>
+
+<!-- ── TOKEN MODAL ── -->
+<div class="modal-overlay" id="tokenModal" style="display:none" onclick="closeModalOutside(event)">
+  <div class="modal fade-in">
+    <div class="modal-head">
+      <div><div class="modal-title">🪙 Buy Tokens</div><div class="modal-sub">Tokens power every tool. No subscription needed. Pay only for what you use.</div></div>
+      <button class="btn-close" onclick="closeTokenModal()">✕</button>
+    </div>
+    <div class="how-tokens">
+      <div class="how-title">What tokens get you</div>
+      <div class="how-grid">
+        <div class="how-item"><div class="how-icon">🎬</div><div class="how-label">Video</div><div class="how-cost">8–18 🪙</div></div>
+        <div class="how-item"><div class="how-icon">🤖</div><div class="how-label">Avatar</div><div class="how-cost">10–18 🪙</div></div>
+        <div class="how-item"><div class="how-icon">🎵</div><div class="how-label">Full Song</div><div class="how-cost">5–7 🪙</div></div>
+        <div class="how-item"><div class="how-icon">🎙️</div><div class="how-label">Voice</div><div class="how-cost">2–20 🪙</div></div>
+        <div class="how-item"><div class="how-icon">🎨</div><div class="how-label">Image</div><div class="how-cost">2–5 🪙</div></div>
+        <div class="how-item"><div class="how-icon">🌍</div><div class="how-label">Translate</div><div class="how-cost">3–8 🪙</div></div>
+        <div class="how-item"><div class="how-icon">📝</div><div class="how-label">Script</div><div class="how-cost">3 🪙</div></div>
+        <div class="how-item"><div class="how-icon">🔗</div><div class="how-label">Workflow</div><div class="how-cost">FREE</div></div>
+      </div>
+    </div>
+    <div class="pack-grid" id="packGrid"></div>
+    <div style="font-size:11px;font-weight:800;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Pay With</div>
+    <div class="pay-methods" id="payMethods"></div>
+    <div class="monthly-plan">
+      <div><div style="color:var(--gold);font-weight:800;font-size:15px">💎 Monthly Token Plan</div><div style="color:var(--grey);font-size:12px;margin-top:4px">2,000 tokens/month + 20% off all top-ups. Auto-renews.</div></div>
+      <div style="text-align:right;flex-shrink:0"><div style="font-size:22px;font-weight:800;color:var(--white)">£39<span style="font-size:13px;color:var(--grey)">/mo</span></div><button class="btn-buy" style="margin-top:6px;font-size:12px">Subscribe →</button></div>
+    </div>
+    <button class="btn-full" id="checkoutBtn" onclick="checkout()" style="margin-top:4px">Select a pack to continue</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+let tokenBalance = 247;
+let selectedPack = null;
+let selectedPayment = null;
+let activeTool = null;
+let activeCat = 'all';
+let installedApps = new Set(['app_nano_banana','app_elevenlabs']);
+let activeAgents = new Set(['content_agent','dm_agent']);
+let generating = false;
+
+const TOOLS = [
+  // MENTORA â€” AI Coaching
+  {id:'mentora_script',name:'Mentora Script',icon:'ðŸŽ“',cat:'content',tokens:2,time:'8s',desc:'AI coaching scripts: motivational, educational, authority-building. Hooks that convert',badge:'MENTORA',badgeColor:'#10B981',
+   fields:[
+    {id:'topic',type:'textarea',label:'Coaching Topic',ph:'e.g. How I went from broke to Â£10K/mo in 90 days without a 9-5...'},
+    {id:'tone',type:'chips',label:'Tone',opts:['Motivational','Educational','Authority','Raw & Real','Spiritual','Tactical'],default:'Motivational'},
+    {id:'platform',type:'chips',label:'Platform',opts:['TikTok','Instagram','YouTube','LinkedIn','Podcast'],default:'TikTok'},
+    {id:'length',type:'chips',label:'Script Length',opts:['30s (hook only)','60s','90s','3 min','5 min'],default:'60s'},
+   ]},
+  // OPENART â€” Advanced Image
+  {id:'openart_image',name:'OpenArt Image',icon:'ðŸŽ¨',cat:'image',tokens:3,time:'12s',desc:'OpenArt SDXL: photorealistic portraits, product shots, artistic styles. 4K output',badge:'OPENART',badgeColor:'#8B5CF6',
+   fields:[
+    {id:'prompt',type:'textarea',label:'Image Prompt',ph:'e.g. Luna AI, 25, Brazilian, luxury penthouse, golden hour, editorial photography, Canon 5D...'},
+    {id:'style',type:'chips',label:'Style',opts:['Photorealistic','Editorial','Cinematic','Artistic','Dark & Moody','Anime','3D Render'],default:'Photorealistic'},
+    {id:'aspect',type:'chips',label:'Aspect Ratio',opts:['1:1 Square','9:16 Portrait','16:9 Landscape','4:5 Instagram'],default:'9:16 Portrait'},
+    {id:'quality',type:'chips',label:'Quality',opts:['Standard','HD','4K'],default:'HD'},
+   ]},
+  // SHORT VIDEO 3-8s
+  {id:'short_video',name:'Short Video (3-8s)',icon:'âš¡',cat:'video',tokens:5,time:'20s',desc:'Fast 3-8 second clips for TikTok, Reels, Stories. Wan 2.1 model â€” best value',badge:'WAN 2.1',badgeColor:'#F59E0B',
+   fields:[
+    {id:'prompt',type:'textarea',label:'Describe the clip',ph:'e.g. Luna AI smiling and waving at camera, luxury bedroom background, warm lighting...'},
+    {id:'duration',type:'chips',label:'Duration',opts:['3s','4s','5s','6s','7s','8s'],default:'5s'},
+    {id:'aspect',type:'chips',label:'Format',opts:['9:16 (TikTok/Reels)','1:1 (Square)','16:9 (YouTube)'],default:'9:16 (TikTok/Reels)'},
+    {id:'motion',type:'chips',label:'Motion Amount',opts:['Subtle','Medium','Dynamic'],default:'Medium'},
+   ]},
+  // LONG CAPTION
+  {id:'long_caption',name:'Long Caption',icon:'ðŸ“',cat:'content',tokens:1,time:'5s',desc:'Full-length captions 150-300 words with storytelling, CTA, 30 hashtags. Converts browsers to buyers',badge:null,
+   fields:[
+    {id:'topic',type:'textarea',label:'What is the post about?',ph:'e.g. My morning routine, how I stay consistent, behind the scenes of my shoot...'},
+    {id:'platform',type:'chips',label:'Platform',opts:['Instagram','TikTok','Facebook','LinkedIn','Threads'],default:'Instagram'},
+    {id:'style',type:'chips',label:'Caption Style',opts:['Storytelling','Educational','Vulnerable & Real','Hype & Energy','Mysterious','Direct CTA'],default:'Storytelling'},
+    {id:'cta',type:'chips',label:'Call To Action',opts:['Follow for more','Link in bio','DM me','Comment below','Subscribe','Shop now'],default:'Follow for more'},
+   ]},
+  // VIDEO
+  {id:'text_to_video',name:'Text → Video',icon:'🎬',cat:'video',tokens:8,time:'45s',desc:'Cinematic video from any prompt. Up to 2 min, 1080p 30fps',badge:'KLING',badgeColor:'#C9A84C',
+   fields:[
+    {id:'prompt',type:'textarea',label:'Describe your video',ph:'e.g. Luna AI walking through a luxury penthouse at sunset, slow cinematic push, golden hour light...'},
+    {id:'duration',type:'chips',label:'Duration',opts:['5s','10s','15s','30s','60s','2min'],default:'10s'},
+    {id:'aspect',type:'chips',label:'Aspect Ratio',opts:['9:16 (TikTok)','1:1 (Square)','16:9 (YouTube)','4:5 (Instagram)'],default:'9:16 (TikTok)'},
+    {id:'model',type:'chips',label:'Kling Model',opts:['Kling 2.5 Turbo (Fast)','Kling 2.6 (Audio+Video)','Kling O1 (Cinema)'],default:'Kling 2.5 Turbo (Fast)'},
+    {id:'style',type:'chips',label:'Visual Style',opts:['Cinematic','Realistic','Stylised','Dark & Moody','Luxury','Playful'],default:'Cinematic'},
+   ]},
+  {id:'image_to_video',name:'Image → Video',icon:'📸',cat:'video',tokens:6,time:'35s',desc:'Animate any photo into a realistic video clip',badge:null,
+   fields:[
+    {id:'image_url',type:'upload',label:'Upload Image or Paste URL',ph:'https://...'},
+    {id:'motion',type:'chips',label:'Motion Type',opts:['Subtle breathe','Camera pan','Zoom in','Character walks','Wind in hair','Custom motion'],default:'Subtle breathe'},
+    {id:'duration',type:'chips',label:'Duration',opts:['3s','5s','10s'],default:'5s'},
+   ]},
+  {id:'lip_sync',name:'Lip Sync',icon:'👄',cat:'video',tokens:5,time:'30s',desc:'Sync any audio to video with perfect lip movements. 175+ languages',badge:'HEYGEN',badgeColor:'#3B82F6',
+   fields:[
+    {id:'video_url',type:'input',label:'Video URL',ph:'https://... (paste video link)'},
+    {id:'audio_url',type:'input',label:'Audio / Script URL',ph:'https://... or type a script below'},
+    {id:'script',type:'textarea',label:'Or type a script (we\'ll generate voice)',ph:'Type what you want the creator to say...'},
+    {id:'language',type:'select',label:'Output Language',opts:['English','Spanish','French','Portuguese','German','Japanese','Korean','Mandarin','Arabic','Hindi','Italian','Dutch','Russian'],default:'English'},
+   ]},
+  {id:'video_extend',name:'Extend Video',icon:'⏭️',cat:'video',tokens:4,time:'25s',desc:'Seamlessly extend any video to make it longer',badge:'KLING',badgeColor:'#C9A84C',
+   fields:[
+    {id:'video_url',type:'input',label:'Video URL',ph:'Paste video link...'},
+    {id:'extra',type:'chips',label:'Add How Much?',opts:['+ 5s','+ 10s','+ 15s','+ 30s'],default:'+ 10s'},
+   ]},
+  {id:'start_end_frame',name:'Start / End Frame',icon:'🎞️',cat:'video',tokens:7,time:'40s',desc:'Upload start and end images — AI generates the perfect transition',badge:'KLING O1',badgeColor:'#C9A84C',
+   fields:[
+    {id:'start_url',type:'input',label:'Start Frame Image URL',ph:'https://...'},
+    {id:'end_url',type:'input',label:'End Frame Image URL',ph:'https://...'},
+    {id:'duration',type:'chips',label:'Transition Length',opts:['3s','5s','8s','10s'],default:'5s'},
+   ]},
+  {id:'motion_transfer',name:'Motion Transfer',icon:'🕹️',cat:'video',tokens:9,time:'50s',desc:'Extract motion from one video, apply it to your creator — motion capture via text',badge:'KLING O1',badgeColor:'#C9A84C',
+   fields:[
+    {id:'motion_video',type:'input',label:'Reference Motion Video URL',ph:'Video with the motion you want to copy'},
+    {id:'target',type:'input',label:'Target Character Image URL',ph:'Image of your creator'},
+   ]},
+  // AVATAR
+  {id:'talking_avatar',name:'Talking Avatar',icon:'🤖',cat:'avatar',tokens:10,time:'60s',desc:'Script → photorealistic talking video. Full-body, micro-expressions, 175+ languages',badge:'HEYGEN',badgeColor:'#3B82F6',
+   fields:[
+    {id:'script',type:'textarea',label:'Script',ph:'Hey gorgeous, I\'ve been thinking about you all day. I made something just for you...'},
+    {id:'avatar_id',type:'chips',label:'Creator Avatar',opts:['Luna AI','Jax Cyber','Sienna Gold','Marcus Fit','Zara Eats','Custom Avatar'],default:'Luna AI'},
+    {id:'language',type:'select',label:'Language',opts:['English','Spanish','French','Portuguese','German','Japanese','Korean','Mandarin','Arabic','Hindi','Italian'],default:'English'},
+    {id:'emotion',type:'chips',label:'Emotion',opts:['Natural','Flirty','Confident','Playful','Mysterious','Excited','Serious'],default:'Natural'},
+    {id:'background',type:'chips',label:'Background',opts:['Luxury apartment','Bedroom','Office','Studio','Outdoors','Custom'],default:'Luxury apartment'},
+    {id:'quality',type:'chips',label:'Quality',opts:['Avatar III (Fast)','Avatar IV (Premium — 2× tokens)'],default:'Avatar III (Fast)'},
+   ]},
+  {id:'avatar_iv',name:'Avatar IV — 4K',icon:'✨',cat:'avatar',tokens:18,time:'90s',desc:'HeyGen Avatar IV: hyper-realistic full body, timing-aware gestures, micro-expressions',badge:'PREMIUM',badgeColor:'#A855F7',
+   fields:[
+    {id:'script',type:'textarea',label:'Script',ph:'Enter what your creator will say...'},
+    {id:'avatar_id',type:'chips',label:'Creator',opts:['Luna AI','Jax Cyber','Sienna Gold','Bella Beauty','Custom'],default:'Luna AI'},
+    {id:'gestures',type:'chips',label:'Gesture Prompts',opts:['Wave at start','Natural throughout','Hair touch','Point to camera','Dance move','None'],default:'Natural throughout'},
+    {id:'emotion',type:'chips',label:'Emotion Arc',opts:['Confident → Playful','Mysterious → Warm','Energetic throughout','Calm → Excited'],default:'Confident → Playful'},
+   ]},
+  {id:'create_avatar',name:'Create Creator Avatar',icon:'🧬',cat:'avatar',tokens:15,time:'2min',desc:'Generate a unique AI creator: face, body, consistent identity across all content',badge:'NANO',badgeColor:'#FF9800',
+   fields:[
+    {id:'niche',type:'chips',label:'Niche',opts:['Luxury Lifestyle','Fitness','Gaming','Fashion','Cooking','ASMR','Finance','Travel'],default:'Luxury Lifestyle'},
+    {id:'nationality',type:'input',label:'Nationality / Ethnicity',ph:'e.g. Italian-Brazilian, Korean, French-Moroccan...'},
+    {id:'age',type:'input',label:'Age',ph:'22'},
+    {id:'style',type:'chips',label:'Visual Style',opts:['Ultra-realistic','Editorial','Artistic','Dark','Soft & Natural'],default:'Ultra-realistic'},
+    {id:'gender',type:'chips',label:'Gender',opts:['Female','Male','Non-binary'],default:'Female'},
+   ]},
+  {id:'photo_to_avatar',name:'Photo → Avatar',icon:'📷',cat:'avatar',tokens:12,time:'90s',desc:'Upload any photo → consistent AI avatar for unlimited content',badge:null,
+   fields:[
+    {id:'photo_url',type:'upload',label:'Upload Photo or Paste URL',ph:'https://...'},
+    {id:'style',type:'chips',label:'Avatar Style',opts:['Hyper-realistic','Anime','3D Rendered','Editorial','Dark & Moody'],default:'Hyper-realistic'},
+   ]},
+  {id:'video_translate',name:'Video Translate',icon:'🌍',cat:'translate',tokens:8,time:'45s',desc:'Translate any video into 175+ languages with perfect lip sync. HeyGen Speed & Precision modes',badge:'HEYGEN',badgeColor:'#3B82F6',
+   fields:[
+    {id:'video_url',type:'input',label:'Video URL',ph:'Paste your video link...'},
+    {id:'source_lang',type:'select',label:'Original Language',opts:['English','Spanish','French','Portuguese','Other — auto-detect'],default:'English'},
+    {id:'target_lang',type:'select',label:'Translate To',opts:['Spanish','French','Portuguese','German','Japanese','Korean','Mandarin','Arabic','Hindi','Italian','Dutch','Russian','Polish','Turkish','Indonesian'],default:'Spanish'},
+    {id:'mode',type:'chips',label:'Translation Mode',opts:['Speed Mode (Quick)','Precision Mode (High-stakes)'],default:'Speed Mode (Quick)'},
+   ]},
+  // MUSIC
+  {id:'text_to_song',name:'Text → Full Song',icon:'🎵',cat:'music',tokens:5,time:'30s',desc:'Describe a vibe → complete song: lyrics, vocals, instruments, mixing. 200+ styles',badge:'MUREKA',badgeColor:'#E91E63',
+   fields:[
+    {id:'prompt',type:'textarea',label:'Describe the song',ph:'A sultry R&B track about late nights and luxury. Female vocal, slow tempo, saxophone, bass...'},
+    {id:'genre',type:'chips',label:'Genre',opts:['R&B','Pop','Hip-Hop','Electronic','Afrobeats','Latin','K-Pop','Rock','Ambient','Drill','Country','Jazz'],default:'R&B'},
+    {id:'mood',type:'chips',label:'Mood',opts:['Sensual','Energetic','Melancholic','Happy','Dark','Confident','Mysterious','Romantic'],default:'Sensual'},
+    {id:'vocal',type:'chips',label:'Vocal',opts:['Female — Warm','Female — Powerful','Male — Deep','Male — Smooth','No Vocals (Instrumental)'],default:'Female — Warm'},
+    {id:'duration',type:'chips',label:'Length',opts:['30s','1 min','2 min','3 min','5 min'],default:'2 min'},
+    {id:'lang',type:'chips',label:'Language',opts:['English','Spanish','Portuguese','French','Korean','Japanese','German','Italian'],default:'English'},
+   ]},
+  {id:'lyrics_to_song',name:'Lyrics → Song',icon:'✍️',cat:'music',tokens:6,time:'35s',desc:'Paste your lyrics → fully produced track with vocals and arrangement',badge:'MUREKA',badgeColor:'#E91E63',
+   fields:[
+    {id:'lyrics',type:'textarea',label:'Your Lyrics',ph:'[Verse 1]\nCaught in your eyes, lost in the night\nEvery word you say feels so right...'},
+    {id:'genre',type:'chips',label:'Genre',opts:['R&B','Pop','Hip-Hop','Electronic','Afrobeats','Latin','Rock','Ambient'],default:'R&B'},
+    {id:'vocal_ref',type:'chips',label:'Vocal Style',opts:['Similar to Beyoncé','Similar to Weeknd','Original Female','Original Male','No vocals'],default:'Original Female'},
+   ]},
+  {id:'hum_to_song',name:'Hum → Song',icon:'🎤',cat:'music',tokens:7,time:'40s',desc:'Record or upload a melody → full produced arrangement. Mureka melody reference mode',badge:'MUREKA',badgeColor:'#E91E63',
+   fields:[
+    {id:'melody_url',type:'upload',label:'Upload Melody / Humming',ph:'https://... or record below'},
+    {id:'genre',type:'chips',label:'Build Into Genre',opts:['R&B','Pop','Electronic','Afrobeats','Hip-Hop','Ambient'],default:'R&B'},
+    {id:'instruments',type:'chips',label:'Key Instruments',opts:['Piano','Saxophone','Guitar','Synth','Bass','Drums','Strings'],default:'Piano'},
+   ]},
+  {id:'reference_match',name:'Match Song Style',icon:'🎧',cat:'music',tokens:4,time:'25s',desc:'Upload reference track → AI creates something similar in your own style',badge:null,
+   fields:[
+    {id:'ref_url',type:'input',label:'Reference Track URL (YouTube, Spotify, SoundCloud)',ph:'https://...'},
+    {id:'custom',type:'textarea',label:'What to change or add',ph:'Keep the vibe but make it about my creator Luna, add her personality...'},
+   ]},
+  {id:'stem_separation',name:'Stem Separation',icon:'🎚️',cat:'music',tokens:3,time:'20s',desc:'Split any song into vocals, drums, bass, instruments — download individually',badge:null,
+   fields:[
+    {id:'audio_url',type:'input',label:'Song URL',ph:'Paste audio link...'},
+    {id:'stems',type:'chips',label:'Export Stems',opts:['All stems','Vocals only','Instrumental only','Drums only','Bass only'],default:'All stems'},
+   ]},
+  {id:'bg_music',name:'Background Music',icon:'🎶',cat:'music',tokens:2,time:'15s',desc:'Generate royalty-free background music for any content. No copyright. Ever.',badge:null,
+   fields:[
+    {id:'mood',type:'chips',label:'Mood',opts:['Chill & Luxury','Energetic','Romantic','Dark & Mysterious','Uplifting','ASMR & Calm'],default:'Chill & Luxury'},
+    {id:'duration',type:'chips',label:'Duration',opts:['15s','30s','60s','2min','Loop'],default:'30s'},
+    {id:'genre',type:'chips',label:'Genre',opts:['Lo-Fi','Electronic','R&B','Cinematic','Jazz','Trap'],default:'Lo-Fi'},
+   ]},
+  // VOICE
+  {id:'clone_voice',name:'Clone Voice',icon:'🎙️',cat:'voice',tokens:20,time:'2min',desc:'30-second sample → permanent voice clone used across all content forever',badge:'ELEVEN',badgeColor:'#00BCD4',
+   fields:[
+    {id:'sample_url',type:'upload',label:'Upload Voice Sample (30+ seconds)',ph:'https://... or upload WAV/MP3'},
+    {id:'voice_name',type:'input',label:'Name This Voice',ph:'e.g. Luna\'s Voice, Sienna_UK...'},
+    {id:'lang',type:'chips',label:'Primary Language',opts:['English','Spanish','French','Portuguese','German','Japanese','Korean','Arabic'],default:'English'},
+   ]},
+  {id:'text_to_speech',name:'Text → Speech',icon:'📢',cat:'voice',tokens:2,time:'10s',desc:'Any text spoken in your creator\'s cloned voice. Any emotion, any speed',badge:null,
+   fields:[
+    {id:'text',type:'textarea',label:'Text to Speak',ph:'Hey beautiful, I\'ve been waiting all day to send you this...'},
+    {id:'voice_id',type:'chips',label:'Creator Voice',opts:['Luna AI','Sienna Gold','Jax Cyber','Marcus Fit','Custom Voice'],default:'Luna AI'},
+    {id:'emotion',type:'chips',label:'Emotion',opts:['Warm & Intimate','Playful','Confident','Mysterious','Excited','Seductive','Neutral'],default:'Warm & Intimate'},
+    {id:'speed',type:'range',label:'Speed',min:0.5,max:2,step:0.1,default:1.0,unit:'×'},
+   ]},
+  {id:'voice_design',name:'Design New Voice',icon:'🔧',cat:'voice',tokens:8,time:'30s',desc:'Build a voice from scratch — gender, age, accent, texture, character',badge:null,
+   fields:[
+    {id:'gender',type:'chips',label:'Gender',opts:['Female','Male','Androgynous'],default:'Female'},
+    {id:'age',type:'chips',label:'Age Feel',opts:['Young (18-24)','Mid (25-34)','Mature (35+)'],default:'Young (18-24)'},
+    {id:'accent',type:'chips',label:'Accent',opts:['British RP','American Southern','French','Brazilian','Korean','Australian','Spanish'],default:'British RP'},
+    {id:'texture',type:'chips',label:'Voice Texture',opts:['Smooth','Breathy','Raspy','Clear & Crisp','Soft','Deep'],default:'Smooth'},
+    {id:'character',type:'chips',label:'Character',opts:['Confident','Submissive','Playful','Dominant','Spiritual','Nerdy','Luxury'],default:'Confident'},
+   ]},
+  {id:'voice_note',name:'Creator Voice Note',icon:'💬',cat:'voice',tokens:3,time:'15s',desc:'Generate a personal voice note from your creator. Perfect for DM upsells',badge:null,
+   fields:[
+    {id:'message',type:'textarea',label:'Message',ph:'Hey babe, I was literally just thinking about you. I made something just for you...'},
+    {id:'voice_id',type:'chips',label:'Creator Voice',opts:['Luna AI','Sienna Gold','Jax Cyber','Marcus Fit'],default:'Luna AI'},
+    {id:'emotion',type:'chips',label:'Emotion',opts:['Flirty & Warm','Playful','Mysterious','Excited'],default:'Flirty & Warm'},
+   ]},
+  // IMAGE
+  {id:'generate_image',name:'Generate Image',icon:'🎨',cat:'image',tokens:3,time:'15s',desc:'Photorealistic creator images from any prompt. Character consistency AI',badge:null,
+   fields:[
+    {id:'prompt',type:'textarea',label:'Describe the image',ph:'Luna AI in a luxury bedroom, silk sheets, soft golden light, editorial photography, 8K...'},
+    {id:'style',type:'chips',label:'Style',opts:['Photorealistic','Editorial','Dark & Moody','Soft Natural','Fashion','Artistic'],default:'Photorealistic'},
+    {id:'aspect',type:'chips',label:'Aspect Ratio',opts:['Portrait 4:5','Square 1:1','Story 9:16','Landscape 16:9'],default:'Portrait 4:5'},
+    {id:'quality',type:'chips',label:'Quality',opts:['Standard (3🪙)','High Res (5🪙)','4K Upscale (7🪙)'],default:'Standard (3🪙)'},
+   ]},
+  {id:'consistent_creator',name:'Consistent Creator',icon:'🔒',cat:'image',tokens:5,time:'20s',desc:'Same face, different scenes. Character consistency across unlimited images',badge:'NANO',badgeColor:'#FF9800',
+   fields:[
+    {id:'creator',type:'chips',label:'Creator',opts:['Luna AI','Sienna Gold','Marcus Fit','Bella Beauty','Custom'],default:'Luna AI'},
+    {id:'scene',type:'textarea',label:'Scene Description',ph:'At the gym in luxury activewear, natural lighting, editorial style...'},
+    {id:'outfit',type:'input',label:'Outfit / Clothing',ph:'e.g. Red silk dress, luxury brand...'},
+   ]},
+  {id:'image_edit',name:'Edit Image',icon:'✏️',cat:'image',tokens:3,time:'15s',desc:'Change outfits, swap backgrounds, edit lighting on any image with text commands',badge:'KLING',badgeColor:'#C9A84C',
+   fields:[
+    {id:'image_url',type:'upload',label:'Image to Edit',ph:'https://...'},
+    {id:'edit_prompt',type:'textarea',label:'What to Change',ph:'Change the dress to gold, add a beach background, make the lighting warmer...'},
+   ]},
+  {id:'upscale',name:'Upscale to 4K',icon:'⬆️',cat:'image',tokens:2,time:'10s',desc:'Upscale any image to stunning 4K resolution without quality loss',badge:null,
+   fields:[
+    {id:'image_url',type:'upload',label:'Image URL',ph:'https://...'},
+    {id:'scale',type:'chips',label:'Target Resolution',opts:['2× (HD)','4× (4K)','8× (8K Print)'],default:'4× (4K)'},
+   ]},
+  // CONTENT / SCRIPTS
+  {id:'script_writer',name:'Script Writer',icon:'📝',cat:'content',tokens:3,time:'15s',desc:'Full video script optimised for hooks, watch time and platform algorithms',badge:'SINTRA',badgeColor:'#C9A84C',
+   fields:[
+    {id:'topic',type:'input',label:'Topic',ph:'Morning routine, gym session, behind the scenes, luxury lifestyle...'},
+    {id:'platform',type:'chips',label:'Platform',opts:['TikTok','Instagram Reels','OnlyFans','Fansly','GLOWX.live','YouTube Shorts'],default:'TikTok'},
+    {id:'duration',type:'chips',label:'Video Length',opts:['15 seconds','30 seconds','60 seconds','3 minutes'],default:'60 seconds'},
+    {id:'creator',type:'chips',label:'Creator Persona',opts:['Luna AI','Sienna Gold','Jax Cyber','Marcus Fit'],default:'Luna AI'},
+    {id:'style',type:'chips',label:'Style',opts:['Flirty & Personal','Motivational','ASMR / Calm','Bold & Confident','Storytelling'],default:'Flirty & Personal'},
+   ]},
+  {id:'caption_writer',name:'Caption + Hashtags',icon:'#️⃣',cat:'content',tokens:2,time:'10s',desc:'Platform-optimised captions and hashtag sets that actually rank',badge:null,
+   fields:[
+    {id:'content_desc',type:'textarea',label:'Describe your content',ph:'Gym session showing my morning workout routine, luxury activewear, gold lighting...'},
+    {id:'platform',type:'chips',label:'Platform',opts:['TikTok','Instagram','Twitter/X','Reddit','Threads'],default:'TikTok'},
+    {id:'goal',type:'chips',label:'Goal',opts:['Max reach','Drive subs','Sell PPV','Build following','Get comments'],default:'Max reach'},
+   ]},
+  {id:'dm_reply',name:'DM Reply Writer',icon:'💌',cat:'content',tokens:2,time:'10s',desc:'In-character fan DM replies with built-in upsells. Personalised, never robotic',badge:'SINTRA',badgeColor:'#C9A84C',
+   fields:[
+    {id:'fan_message',type:'textarea',label:'Fan\'s Message',ph:'Paste what the fan said...'},
+    {id:'creator',type:'chips',label:'Creator',opts:['Luna AI','Sienna Gold','Jax Cyber'],default:'Luna AI'},
+    {id:'upsell',type:'chips',label:'Include Upsell?',opts:['Yes — PPV','Yes — Phone call','Yes — WhatsApp','Yes — Video call','No upsell'],default:'Yes — PPV'},
+    {id:'tone',type:'chips',label:'Tone',opts:['Flirty','Playful','Mysterious','Warm','Direct'],default:'Flirty'},
+   ]},
+  {id:'viral_scorer',name:'Viral Scorer',icon:'📊',cat:'analytics',tokens:2,time:'10s',desc:'Score any content 0-100 for virality before posting. Only post the winners',badge:'SINTRA',badgeColor:'#C9A84C',
+   fields:[
+    {id:'content',type:'textarea',label:'Paste Your Content / Caption / Script',ph:'Paste what you want to score...'},
+    {id:'platform',type:'chips',label:'Platform',opts:['TikTok','Instagram','OnlyFans','Fansly','YouTube'],default:'TikTok'},
+   ]},
+];
+
+const PACKAGES = [
+  {id:'starter',name:'Starter Pack',tokens:100,bonus:0,price:5.99,per:'£0.060/token'},
+  {id:'creator',name:'Creator Pack',tokens:500,bonus:50,price:24.99,per:'£0.045/token',popular:true},
+  {id:'pro',name:'Pro Pack',tokens:1500,bonus:250,price:59.99,per:'£0.034/token'},
+  {id:'empire',name:'Empire Pack',tokens:5000,bonus:1000,price:149.99,per:'£0.025/token'},
+];
+
+const PAYMENTS = [
+  {id:'card',name:'Card',icon:'💳'},
+  {id:'paypal',name:'PayPal',icon:'💸'},
+  {id:'crypto',name:'Crypto',icon:'🪙'},
+  {id:'apple',name:'Apple Pay',icon:'📱'},
+  {id:'ton',name:'TON',icon:'🟡'},
+];
+
+const APPS = [
+  {id:'app_kling',name:'Kling AI',icon:'🎬',dev:'Kuaishou Technology',cat:'Video',desc:'State-of-the-art text-to-video and image-to-video generation. Up to 2min, 1080p, 30fps. Kling 2.5 Turbo, 2.6 Audio+Video, O1 Cinema modes.',caps:['Text to Video','Image to Video','Lip Sync','Video Extend','Start/End Frame','Motion Transfer','Camera Control'],price:'0.08 tokens/sec',rating:'4.9 ⭐',badge:'FEATURED',badgeColor:'#C9A84C',useCases:['9× daily content posts','PPV teasers','Lifestyle clips','Platform promos'],installs:3841},
+  {id:'app_heygen',name:'HeyGen',icon:'🤖',dev:'HeyGen Inc.',cat:'Avatar Video',desc:'Avatar IV model: hyper-realistic full-body avatars, micro-expressions, timing-aware gestures. Video translation into 175+ languages with matched lip-sync. Video Agent automates entire production pipeline.',caps:['Avatar IV','Video Translation','Lip Sync 175+ langs','Video Agent','Talking Photos','Interactive Avatar','Script Assistant'],price:'10 tokens/min',rating:'4.9 ⭐',badge:'FEATURED',badgeColor:'#3B82F6',useCases:['Talking creator videos','Multi-language content','DM video replies','Course/tutorial videos'],installs:5102},
+  {id:'app_mureka',name:'Mureka',icon:'🎵',dev:'Skywork AI (Singapore)',cat:'Music',desc:'Full-stack AI music: text prompts, lyrics, humming, reference tracks → complete songs with vocals, arrangement and stems. 200+ styles, 10+ languages. Built-in song marketplace. V7.5 model.',caps:['Text to Song','Lyrics to Song','Melody/Hum Reference','Style Matching','Stem Separation','5-min tracks','Music Marketplace','MIDI Export'],price:'5 tokens/song',rating:'4.7 ⭐',badge:'FEATURED',badgeColor:'#E91E63',useCases:['Creator theme songs','Video background music','Jingles for brand deals','Sell songs in marketplace'],installs:2210},
+  {id:'app_elevenlabs',name:'ElevenLabs',icon:'🎙️',dev:'ElevenLabs',cat:'Voice',desc:'Industry-leading voice cloning from 30-second samples. Ultra-realistic speech in 29+ languages. Emotion control, speed, texture. Powers the creator phone call and voice note features.',caps:['Voice Cloning','Text to Speech','Emotion Control','Voice Design','29+ Languages','Multilingual','Audio Native'],price:'2 tokens/request',rating:'4.9 ⭐',badge:'POPULAR',badgeColor:'#00BCD4',useCases:['Creator voice identity','Video narration','DM voice notes','Phone call voice'],installs:6720},
+  {id:'app_nano',name:'Nano Banana',icon:'🍌',dev:'Nano Banana Inc.',cat:'Avatar',desc:'Ultra-realistic AI avatar generation with rock-solid character consistency. Create a creator face once, use it across unlimited images and videos forever. Face swap, expression control.',caps:['Avatar Creation','Character Consistency','Face Animation','Expression Control','Scene Generation','Outfit Swap'],price:'5 tokens/image',rating:'4.8 ⭐',badge:'POPULAR',badgeColor:'#FF9800',useCases:['Creator face creation','Consistent content posts','Profile & thumbnail images','PPV cover images'],installs:3102},
+  {id:'app_runway',name:'Runway Gen-3',icon:'🚀',dev:'Runway ML',cat:'Video',desc:'Hollywood-quality cinematic AI video. Gen-3 Alpha + inpainting, motion brush, semantic editing. Lionsgate partnership. Best-in-class for premium content.',caps:['Text to Video','Motion Brush','Video Inpainting','Camera Control','Style Transfer','Semantic Edit'],price:'0.15 tokens/sec',rating:'4.8 ⭐',badge:'PREMIUM',badgeColor:'#A855F7',useCases:['High-end PPV content','Brand deal videos','Cinematic teasers','Agency-grade output'],installs:987},
+  {id:'app_pika',name:'Pika Labs',icon:'⚡',dev:'Pika Labs',cat:'Video',desc:'Fast, creative video generation optimised for short-form TikTok and Reels. Video remix, lip sync, sound effects. Best for bulk content at scale.',caps:['Text to Video','Video Remix','Lip Sync','Sound Effects','Fast Mode','Bulk Generation'],price:'0.04 tokens/sec',rating:'4.6 ⭐',badge:'FAST',badgeColor:'#FF9800',useCases:['TikTok bulk content','Instagram Reels','Daily post generation','Story content'],installs:4301},
+  {id:'app_midjourney',name:'Midjourney',icon:'🎨',dev:'Midjourney Inc.',cat:'Image',desc:'Gold standard image generation. Character reference, style reference, inpainting. Best for creator profile images, thumbnails and PPV cover shots.',caps:['Image Generation','Character Reference','Style Reference','Inpainting','Upscaling','Vary Region'],price:'3 tokens/image',rating:'4.9 ⭐',badge:null,useCases:['Creator profile images','Post thumbnails','PPV cover art','Marketing assets'],installs:8720},
+];
+
+const AGENTS = [
+  {id:'content_agent',name:'Soshie',role:'Social Media Manager',icon:'📱',desc:'Plans, writes, schedules and posts content across all platforms daily. Analyses performance and adapts strategy automatically. Never needs a brief.',tasks:['9× daily posts','Caption writing','Hashtag research','Performance analysis','Platform scheduling'],active:true},
+  {id:'dm_agent',name:'Milli',role:'DM & Sales Agent',icon:'💬',desc:'Responds to every fan DM in-character, 24/7. Natural upsells in every reply. Handles PPV pitches, call bookings and WhatsApp subscriptions automatically.',tasks:['Fan DM replies','PPV upsells','Call bookings','WhatsApp pitches','Whale detection'],active:true},
+  {id:'brand_agent',name:'Penn',role:'Brand Deal Manager',icon:'🤝',desc:'Finds brands in your creator\'s niche, scores fit out of 100, writes personalised pitch emails with your rate card. Follows up automatically.',tasks:['Brand discovery','Fit scoring','Pitch writing','Rate card sends','Follow-up sequences'],active:false},
+  {id:'analytics_agent',name:'Aria',role:'Analytics & Insight',icon:'📊',desc:'Tracks every metric across all creators and platforms. Weekly reports, viral score analysis, revenue attribution, best-performing content breakdowns.',tasks:['Revenue tracking','Viral scoring','A/B analysis','Weekly reports','Growth alerts'],active:false},
+  {id:'lead_agent',name:'Scout',role:'Audience Growth Agent',icon:'🎯',desc:'Finds potential fans across Reddit, TikTok comments, competitor pages. Sends first-touch engagement. Drives cold traffic to your creator\'s profile.',tasks:['Lead scraping','Comment targeting','Reddit outreach','Competitor audience','First-touch DMs'],active:false},
+  {id:'voice_agent',name:'Velvet',role:'Voice & Call Agent',icon:'📞',desc:'Manages all Twilio calls, WhatsApp conversations and video sessions in-character. Handles booking, billing and fan relationship management for premium communication.',tasks:['Phone call handling','WhatsApp management','Video call booking','Per-minute billing','Relationship memory'],active:false},
+];
+
+const WORKFLOWS = [
+  {id:'daily_content',name:'Daily Content Loop',icon:'🔄',desc:'Auto-generates and posts 9× daily across all platforms',steps:['📝 Script Writer','🤖 Talking Avatar','🎵 Background Music','📊 Viral Scorer','📤 Auto-Post'],runs:'Runs 9× daily • FREE'},
+  {id:'ppv_pipeline',name:'PPV Teaser Pipeline',icon:'🔒',desc:'Creates PPV teasers with lip-sync and music, posts automatically',steps:['📝 PPV Script','🎬 Text → Video','👄 Lip Sync','📤 Post to OnlyFans/Fansly'],runs:'Runs weekly • FREE'},
+  {id:'new_fan',name:'New Fan Welcome',icon:'👋',desc:'When a new subscriber joins, generates a personalised welcome video',steps:['📋 Fan Data','📝 Welcome Script','🤖 Talking Avatar','📤 Auto-DM Fan'],runs:'Triggers on new sub • FREE'},
+  {id:'music_video',name:'Music Video Creator',icon:'🎬',desc:'Full music video end-to-end from a topic',steps:['🎵 Text → Song','🎬 Text → Video','👄 Lip Sync','⬆️ Upscale 4K','📤 Post to TikTok'],runs:'On demand • FREE'},
+  {id:'brand_pitch',name:'Brand Deal Finder',icon:'🤝',desc:'Scans for brands, scores fit, sends pitches automatically',steps:['🤖 Brand Scout','📊 Fit Scorer','📝 Pitch Writer','📧 Auto-Email Brands'],runs:'Runs weekly • FREE'},
+  {id:'translation',name:'Content Localisation',icon:'🌍',desc:'Takes any video and makes versions in 5 languages automatically',steps:['🎬 Source Video','🌍 Translate (ES)','🌍 Translate (FR)','🌍 Translate (PT)','📤 Multi-Post'],runs:'On demand • FREE'},
+];
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderToolList();
+  renderPackGrid();
+  renderPayMethods();
+  renderAppGrid();
+  renderAgentsGrid();
+  renderWorkflowGrid();
+  updateTokenUI();
+});
+
+// ═══════════════════════════════════════════════════════════
+// PAGE NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const studioEls = ['iconNav','toolSidebar','studioPage','rightPanel'];
+  const pages = {
+    studio: ['studioPage'],
+    marketplace: ['marketplacePage'],
+    agents: ['agentsPage'],
+    workflows: ['workflowsPage'],
+  };
+
+  // hide all
+  document.getElementById('iconNav').style.display = 'none';
+  document.getElementById('toolSidebar').style.display = 'none';
+  document.getElementById('studioPage').style.display = 'none';
+  document.getElementById('rightPanel').style.display = 'none';
+  document.getElementById('marketplacePage').style.display = 'none';
+  document.getElementById('agentsPage').style.display = 'none';
+  document.getElementById('workflowsPage').style.display = 'none';
+
+  if (page === 'studio') {
+    document.getElementById('iconNav').style.display = 'flex';
+    document.getElementById('toolSidebar').style.display = 'flex';
+    document.getElementById('studioPage').style.display = 'block';
+    document.getElementById('rightPanel').style.display = 'flex';
+    document.getElementById('app').style.gridTemplateColumns = '64px 220px 1fr 280px';
+  } else {
+    document.getElementById(page+'Page').style.display = 'grid';
+    document.getElementById('app').style.gridTemplateColumns = '0 0 1fr 0';
+    document.getElementById(page+'Page').style.gridColumn = '1/-1';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOOL LIST
+// ═══════════════════════════════════════════════════════════
+function renderToolList(filter='') {
+  const list = document.getElementById('toolList');
+  const tools = TOOLS.filter(t => {
+    const matchCat = activeCat === 'all' || t.cat === activeCat;
+    const matchSearch = !filter || t.name.toLowerCase().includes(filter) || t.desc.toLowerCase().includes(filter);
+    return matchCat && matchSearch;
+  });
+
+  list.innerHTML = tools.map(t => `
+    <div class="tool-item ${activeTool?.id === t.id ? 'active' : ''}" onclick="openTool('${t.id}')">
+      <div class="tool-icon">${t.icon}</div>
+      <div class="tool-info">
+        <div class="tool-name">
+          ${t.name}
+          ${t.badge ? `<span class="badge" style="background:${t.badgeColor}22;color:${t.badgeColor}">${t.badge}</span>` : ''}
+        </div>
+        <div class="tool-desc">${t.desc}</div>
+      </div>
+      <div class="tool-cost">${t.tokens === 0 ? '<span class="free">FREE</span>' : `🪙${t.tokens}`}</div>
+    </div>
+  `).join('');
+}
+
+function filterCat(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active'));
+  event?.target?.classList?.add('active');
+  renderToolList(document.getElementById('toolSearch')?.value || '');
+}
+
+function filterTools() {
+  const q = document.getElementById('toolSearch').value.toLowerCase();
+  renderToolList(q);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOOL WORKSPACE
+// ═══════════════════════════════════════════════════════════
+function openTool(toolId) {
+  const tool = TOOLS.find(t => t.id === toolId);
+  if (!tool) return;
+  activeTool = tool;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('toolWorkspace').style.display = 'block';
+  renderToolList();
+  renderWorkspace(tool);
+}
+
+function renderWorkspace(tool) {
+  const ws = document.getElementById('toolWorkspace');
+  const needsTokens = tool.tokens > tokenBalance;
+  const isFree = tool.tokens === 0;
+
+  ws.innerHTML = `
+    <div class="tool-header fade-in">
+      <div class="tool-header-left">
+        <div class="tool-header-icon">${tool.icon}</div>
+        <div>
+          <div class="tool-title">${tool.name} ${tool.badge ? `<span class="badge" style="background:${tool.badgeColor}22;color:${tool.badgeColor};font-size:11px">${tool.badge}</span>` : ''}</div>
+          <div class="tool-subtitle">${tool.desc}</div>
+        </div>
+      </div>
+      <div class="tool-meta">
+        <div class="cost-big ${isFree ? 'cost-free' : ''}">${isFree ? 'FREE' : `🪙 ${tool.tokens}`}</div>
+        <div class="cost-time">~${tool.time}</div>
+        <div class="cost-balance ${needsTokens && !isFree ? 'warn' : ''}">${isFree ? 'No tokens needed' : needsTokens ? `⚠️ Need ${tool.tokens - tokenBalance} more tokens` : `Balance: 🪙${tokenBalance}`}</div>
+      </div>
+    </div>
+    <div class="fade-in" style="animation-delay:.05s">
+      ${tool.fields.map(f => renderField(f)).join('')}
+      <button class="gen-btn" id="genBtn" onclick="generate('${tool.id}')" ${needsTokens && !isFree ? 'disabled' : ''}>
+        ${needsTokens && !isFree ? `<span onclick="openTokenModal()">🪙 Buy ${tool.tokens - tokenBalance} more tokens →</span>` : `<span>⚡ Generate${isFree ? '' : ` — 🪙${tool.tokens} tokens`}</span>`}
+      </button>
+      ${needsTokens && !isFree ? `<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--grey)">or <a href="#" onclick="openTokenModal()" style="color:var(--gold);text-decoration:none">buy a token pack →</a></div>` : ''}
+      <div id="resultBox" style="display:none"></div>
+    </div>
+  `;
+}
+
+function renderField(f) {
+  if (f.type === 'textarea') return `
+    <div class="field">
+      <label class="field-label">${f.label}</label>
+      <textarea class="field-input" rows="4" placeholder="${f.ph}" id="field_${f.id}"></textarea>
+    </div>`;
+  if (f.type === 'input') return `
+    <div class="field">
+      <label class="field-label">${f.label}</label>
+      <input class="field-input" type="text" placeholder="${f.ph}" id="field_${f.id}">
+    </div>`;
+  if (f.type === 'select') return `
+    <div class="field">
+      <label class="field-label">${f.label}</label>
+      <select class="field-input" id="field_${f.id}">
+        ${f.opts.map(o => `<option ${o === f.default ? 'selected' : ''}>${o}</option>`).join('')}
+      </select>
+    </div>`;
+  if (f.type === 'chips') return `
+    <div class="field">
+      <label class="field-label">${f.label}</label>
+      <div class="chip-group" id="chips_${f.id}">
+        ${f.opts.map(o => `<button type="button" class="chip ${o === f.default ? 'selected' : ''}" onclick="selectChip('${f.id}','${o}',this)">${o}</button>`).join('')}
+      </div>
+    </div>`;
+  if (f.type === 'upload') return `
+    <div class="field">
+      <label class="field-label">${f.label}</label>
+      <div class="upload-zone" onclick="document.getElementById('file_${f.id}').click()">
+        <div class="uz-icon">📁</div>
+        <div class="uz-text">Drag & drop or click to upload</div>
+        <div class="uz-sub">Or paste a URL below</div>
+      </div>
+      <input type="file" id="file_${f.id}" style="display:none">
+      <input class="field-input" type="text" placeholder="${f.ph}" style="margin-top:8px" id="field_${f.id}">
+    </div>`;
+  if (f.type === 'range') return `
+    <div class="field">
+      <label class="field-label">${f.label}</label>
+      <div class="range-row">
+        <input type="range" min="${f.min}" max="${f.max}" step="${f.step}" value="${f.default}" id="field_${f.id}" oninput="document.getElementById('rv_${f.id}').textContent=this.value+'${f.unit}'">
+        <div class="range-val" id="rv_${f.id}">${f.default}${f.unit}</div>
+      </div>
+    </div>`;
+  return '';
+}
+
+function selectChip(fieldId, value, el) {
+  document.querySelectorAll(`#chips_${fieldId} .chip`).forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function generate(toolId) {
+  const tool = TOOLS.find(t => t.id === toolId);
+  if (!tool || generating) return;
+  if (tool.tokens > tokenBalance && tool.tokens > 0) { openTokenModal(); return; }
+
+  generating = true;
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner"></div> Generating... (~${tool.time})`;
+
+  setTimeout(() => {
+    if (tool.tokens > 0) {
+      tokenBalance -= tool.tokens;
+      updateTokenUI();
+    }
+    generating = false;
+    btn.disabled = false;
+    btn.innerHTML = `<span>⚡ Generate Again — 🪙${tool.tokens}</span>`;
+    showResult(tool);
+  }, tool.tokens === 0 ? 1000 : Math.random() * 1500 + 1500);
+}
+
+function showResult(tool) {
+  const rb = document.getElementById('resultBox');
+  const icons = {video:'🎬',avatar:'🤖',music:'🎵',voice:'🎙️',image:'🎨',content:'📝',translate:'🌍',analytics:'📊'};
+  rb.style.display = 'block';
+  rb.innerHTML = `
+    <div class="result-box fade-in">
+      <div class="result-head">✅ ${tool.name} Generated Successfully</div>
+      <div class="result-preview">${icons[tool.cat] || '✨'}</div>
+      <div class="result-actions">
+        <button class="btn-sm primary">⬇️ Download</button>
+        <button class="btn-sm">📤 Post to Creator</button>
+        <button class="btn-sm">📋 Copy Link</button>
+        <button class="btn-sm">🔗 Add to Workflow</button>
+        <button class="btn-sm" onclick="document.getElementById('resultBox').style.display='none'">🗑️ Dismiss</button>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOKEN MODAL
+// ═══════════════════════════════════════════════════════════
+function renderPackGrid() {
+  document.getElementById('packGrid').innerHTML = PACKAGES.map(p => `
+    <div class="pack-card ${p.popular ? 'popular' : ''}" id="pack_${p.id}" onclick="selectPack('${p.id}')">
+      ${p.popular ? '<div class="pack-badge">BEST VALUE</div>' : ''}
+      <div class="pack-tokens">🪙 ${(p.tokens + p.bonus).toLocaleString()}</div>
+      ${p.bonus > 0 ? `<div class="pack-bonus">+${p.bonus} bonus tokens</div>` : '<div style="height:18px"></div>'}
+      <div class="pack-name">${p.name}</div>
+      <div class="pack-price">£${p.price}</div>
+      <div class="pack-per">${p.per}</div>
+    </div>`).join('');
+}
+
+function renderPayMethods() {
+  document.getElementById('payMethods').innerHTML = PAYMENTS.map(p => `
+    <button class="pay-btn" id="pay_${p.id}" onclick="selectPayment('${p.id}')">
+      <div class="pay-icon">${p.icon}</div>
+      <div class="pay-name">${p.name}</div>
+    </button>`).join('');
+}
+
+function selectPack(id) {
+  selectedPack = PACKAGES.find(p => p.id === id);
+  document.querySelectorAll('.pack-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('pack_'+id).classList.add('selected');
+  const btn = document.getElementById('checkoutBtn');
+  btn.textContent = `Pay £${selectedPack.price} → Get 🪙${(selectedPack.tokens + selectedPack.bonus).toLocaleString()} tokens`;
+  btn.disabled = false;
+}
+
+function selectPayment(id) {
+  selectedPayment = id;
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('pay_'+id).classList.add('selected');
+}
+
+function checkout() {
+  if (!selectedPack) return;
+  const payName = selectedPayment ? PAYMENTS.find(p => p.id === selectedPayment)?.name : 'Card';
+  const total = selectedPack.tokens + selectedPack.bonus;
+  tokenBalance += total;
+  updateTokenUI();
+  closeTokenModal();
+  const btn = document.getElementById('checkoutBtn');
+  if (btn) { btn.textContent = `✅ ${total.toLocaleString()} tokens added!`; }
+  setTimeout(() => { if (document.getElementById('checkoutBtn')) document.getElementById('checkoutBtn').textContent = 'Select a pack to continue'; }, 3000);
+}
+
+function openTokenModal() { document.getElementById('tokenModal').style.display = 'flex'; }
+function closeTokenModal() { document.getElementById('tokenModal').style.display = 'none'; }
+function closeModalOutside(e) { if (e.target.classList.contains('modal-overlay')) closeTokenModal(); }
+
+function updateTokenUI() {
+  document.getElementById('tokenCount').textContent = tokenBalance;
+  document.getElementById('rpTokenCount').textContent = tokenBalance;
+  const fill = Math.min(100, (tokenBalance / 500) * 100);
+  document.getElementById('tokenFill').style.width = fill + '%';
+  document.getElementById('tokenFill').style.background = tokenBalance < 50 ? 'var(--red)' : tokenBalance < 100 ? '#FF9800' : 'linear-gradient(90deg,var(--gold),var(--gold2))';
+  if (activeTool) renderWorkspace(activeTool);
+}
+
+// ═══════════════════════════════════════════════════════════
+// MARKETPLACE
+// ═══════════════════════════════════════════════════════════
+let expandedApp = null;
+function renderAppGrid() {
+  document.getElementById('appGrid').innerHTML = APPS.map(a => `
+    <div class="app-card ${expandedApp === a.id ? 'expanded' : ''}" onclick="toggleApp('${a.id}')">
+      <div class="app-card-head">
+        <div class="app-logo">${a.icon}</div>
+        <div class="app-card-info">
+          <div class="app-card-name">
+            ${a.name}
+            ${a.badge ? `<span class="badge" style="background:${a.badgeColor}22;color:${a.badgeColor}">${a.badge}</span>` : ''}
+          </div>
+          <div class="app-card-dev">${a.dev}</div>
+        </div>
+      </div>
+      <div class="app-card-desc">${a.desc}</div>
+      <div class="app-caps">${a.caps.slice(0,4).map(c => `<span class="cap">${c}</span>`).join('')}${a.caps.length > 4 ? `<span class="cap">+${a.caps.length-4}</span>` : ''}</div>
+      <div class="app-card-foot">
+        <div>
+          <div class="app-price">${a.price}</div>
+          <div class="app-rating">${a.rating} · ${a.installs.toLocaleString()} installs</div>
+        </div>
+        <button class="install-btn ${installedApps.has(a.id) ? 'installed' : ''}" onclick="toggleInstall('${a.id}',event)">
+          ${installedApps.has(a.id) ? '✓ Installed' : '+ Install'}
+        </button>
+      </div>
+      ${expandedApp === a.id ? `
+        <div class="app-expand fade-in">
+          <div class="expand-sub">Use Cases</div>
+          ${a.useCases.map(u => `<div style="font-size:12px;color:var(--grey);padding:3px 0">→ ${u}</div>`).join('')}
+          <div class="expand-sub" style="margin-top:12px">All Capabilities</div>
+          <div class="app-caps">${a.caps.map(c => `<span class="cap">${c}</span>`).join('')}</div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="btn-sm primary">Configure</button>
+            <button class="btn-sm">View Docs</button>
+            <button class="btn-sm">View Pricing</button>
+          </div>
+        </div>` : ''}
+    </div>`).join('');
+  document.getElementById('installedCount').textContent = installedApps.size;
+}
+
+function toggleApp(id) {
+  expandedApp = expandedApp === id ? null : id;
+  renderAppGrid();
+}
+
+function toggleInstall(id, e) {
+  e.stopPropagation();
+  if (installedApps.has(id)) installedApps.delete(id);
+  else installedApps.add(id);
+  renderAppGrid();
+}
+
+// ═══════════════════════════════════════════════════════════
+// AI AGENTS
+// ═══════════════════════════════════════════════════════════
+function renderAgentsGrid() {
+  document.getElementById('agentsGrid').innerHTML = AGENTS.map(a => `
+    <div class="agent-card fade-in">
+      <div class="agent-avatar">${a.icon}</div>
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-role">${a.role}</div>
+      <div class="agent-status">
+        <div class="status-active" style="background:${activeAgents.has(a.id) ? 'var(--green)' : 'var(--grey)'}"></div>
+        ${activeAgents.has(a.id) ? 'Active — running 24/7' : 'Inactive'}
+      </div>
+      <div class="agent-desc">${a.desc}</div>
+      <div class="agent-tasks">${a.tasks.map(t => `<span class="agent-task">${t}</span>`).join('')}</div>
+      <button class="activate-btn ${activeAgents.has(a.id) ? 'active' : ''}" onclick="toggleAgent('${a.id}',this)">
+        ${activeAgents.has(a.id) ? '✓ Active — Click to Pause' : 'Activate Agent'}
+      </button>
+    </div>`).join('');
+}
+
+function toggleAgent(id, btn) {
+  if (activeAgents.has(id)) { activeAgents.delete(id); btn.textContent = 'Activate Agent'; btn.classList.remove('active'); }
+  else { activeAgents.add(id); btn.textContent = '✓ Active — Click to Pause'; btn.classList.add('active'); }
+  renderAgentsGrid();
+}
+
+// ═══════════════════════════════════════════════════════════
+// WORKFLOWS
+// ═══════════════════════════════════════════════════════════
+function renderWorkflowGrid() {
+  document.getElementById('workflowGrid').innerHTML = WORKFLOWS.map(w => `
+    <div class="agent-card fade-in" style="cursor:default">
+      <div style="font-size:36px;margin-bottom:10px">${w.icon}</div>
+      <div class="agent-name">${w.name}</div>
+      <div class="agent-desc">${w.desc}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin:12px 0">
+        ${w.steps.map((s,i) => `
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--grey);flex:1">${s}</div>
+          </div>
+          ${i < w.steps.length-1 ? '<div style="text-align:center;color:var(--grey);opacity:.4;font-size:12px">↓</div>' : ''}`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--green);margin-bottom:12px;font-weight:600">🔄 ${w.runs}</div>
+      <div style="display:flex;gap:8px">
+        <button class="activate-btn active" style="flex:1;font-size:12px">▶ Run Now</button>
+        <button class="btn-sm" style="font-size:12px">✏️ Edit</button>
+      </div>
+    </div>`).join('');
+}
+
+function showDevForm() {
+  alert('Developer registration form — connect your app to GLOWX Marketplace.\n\nYou earn 80% of all usage revenue. GLOWX takes 20%.\n\nEmail: dev@glowx.live or visit glowx.live/developers');
+}
+</script>
+<script>
+// LIVE API â€” AI Influencer Studio
+const API = 'https://ai-influencer-studio-production.up.railway.app';
+let authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NGFkYjRiLTQ5ZjQtNDljNi1hNTZiLWE5ZWNhMDQxMzc3NSIsImVtYWlsIjoidGVzdDJAZW1waXJlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzcyNzA3OTU5LCJleHAiOjE3NzUyOTk5NTl9.1ITCv1HwHV0Sr_380_lZVo0Svkd-qmPgZUghQLvYsww';
+localStorage.setItem('ai_studio_token', authToken);
+
+function authHeaders() {
+  return {'Content-Type':'application/json', 'Authorization':'Bearer ' + authToken};
+}
+
+function getEndpoint(toolId) {
+  const map = {
+    short_video:'/api/generate/video', text_to_video:'/api/generate/video',
+    image_to_video:'/api/generate/video', talking_avatar:'/api/generate/avatar',
+    avatar_iv:'/api/generate/avatar', lip_sync:'/api/generate/avatar',
+    voice_clone:'/api/generate/voice', text_to_speech:'/api/generate/voice',
+    text_to_song:'/api/generate/music', lyrics_to_song:'/api/generate/music',
+    openart_image:'/api/generate/image', photo_shoot:'/api/generate/image',
+    create_avatar:'/api/generate/image', photo_to_avatar:'/api/generate/image',
+    mentora_script:'/api/generate/script', script_writer:'/api/generate/script',
+    long_caption:'/api/generate/caption', caption_writer:'/api/generate/caption',
+    viral_scorer:'/api/generate/viral-score', dm_writer:'/api/generate/dm',
+  };
+  return map[toolId] || '/api/generate/image';
+}
+
+function buildBody(tool) {
+  const body = {tool_id:tool.id, creator_id:'Luna AI'};
+  tool.fields.forEach(f => {
+    const el = document.getElementById('field_'+f.id);
+    if (el) body[f.id] = el.value;
+    const sel = document.querySelector('#chips_'+f.id+' .chip.selected');
+    if (sel) body[f.id] = sel.textContent.trim();
+  });
+  if (body.topic) body.prompt = body.topic;
+  if (body.script) body.topic = body.script;
+  if (body.avatar_id) body.creator_id = body.avatar_id;
+  body.platform = (body.aspect||'').includes('TikTok')||''?'TikTok':
+                  (body.aspect||'').includes('YouTube')?'YouTube':'Instagram';
+  return body;
+}
+
+function getResultKey(toolId) {
+  const text = ['mentora_script','script_writer','long_caption','caption_writer','viral_scorer','dm_writer'];
+  const audio = ['text_to_song','lyrics_to_song','voice_clone','text_to_speech'];
+  const video = ['short_video','text_to_video','image_to_video','talking_avatar','avatar_iv','lip_sync'];
+  if (text.includes(toolId)) return 'text';
+  if (audio.includes(toolId)) return 'audio_url';
+  if (video.includes(toolId)) return 'video_url';
+  return 'image_url';
+}
+
+async function generate(toolId) {
+  const tool = TOOLS.find(t => t.id === toolId);
+  if (!tool || generating) return;
+  if (tool.tokens > tokenBalance && tool.tokens > 0) { openTokenModal(); return; }
+  generating = true;
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Generating... (~'+tool.time+')';
+  try {
+    const res = await fetch(API + getEndpoint(toolId), {
+      method:'POST', headers:authHeaders(), body:JSON.stringify(buildBody(tool))
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Generation failed');
+    if (data.credits_remaining !== undefined) { tokenBalance = data.credits_remaining; updateTokenUI(); }
+    else if (tool.tokens > 0) { tokenBalance -= tool.tokens; updateTokenUI(); }
+    showLiveResult(tool, data, getResultKey(toolId));
+  } catch(err) {
+    const rb = document.getElementById('resultBox');
+    rb.style.display = 'block';
+    rb.innerHTML = '<div class="result-box fade-in" style="border-color:#ef4444"><div class="result-head" style="color:#ef4444">âš ï¸ '+err.message+'</div><div style="font-size:12px;color:#888;margin-top:8px">Try again or check your connection.</div></div>';
+  } finally {
+    generating = false;
+    btn.disabled = false;
+    btn.innerHTML = '<span>âš¡ Generate Again â€” ðŸª™'+tool.tokens+'</span>';
+  }
+}
+
+function showLiveResult(tool, data, key) {
+  const rb = document.getElementById('resultBox');
+  rb.style.display = 'block';
+  const url = data.image_url || data.video_url || data.audio_url || data.url || '';
+  const text = data.script || data.caption || data.reply || data.score || data.text || '';
+  const isImage = key==='image_url';
+  const isVideo = key==='video_url';
+  const isAudio = key==='audio_url';
+  const isText  = key==='text';
+  let preview = '';
+  if (isImage && url) preview = '<img src="'+url+'" style="max-width:100%;border-radius:8px;margin:12px 0">';
+  else if (isVideo && url) preview = '<video src="'+url+'" controls style="max-width:100%;border-radius:8px;margin:12px 0"></video>';
+  else if (isAudio && url) preview = '<audio src="'+url+'" controls style="width:100%;margin:12px 0"></audio>';
+  else if (isText && text) preview = '<div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:16px;margin:12px 0;font-size:14px;line-height:1.7;color:#e8e8e8;white-space:pre-wrap">'+text+'</div>';
+  else if (url) preview = '<div style="padding:12px;background:#1a1a1a;border-radius:8px;margin:12px 0"><a href="'+url+'" target="_blank" style="color:var(--gold)">'+url+'</a></div>';
+  rb.innerHTML = '<div class="result-box fade-in"><div class="result-head">âœ… '+tool.name+' â€” Done!</div>'+preview+'<div class="result-actions">'+(url?'<a href="'+url+'" download target="_blank"><button class="btn-sm primary">â¬‡ï¸ Download</button></a>':'')+(text?'<button class="btn-sm" onclick="navigator.clipboard.writeText(document.querySelector(\'pre,div[style*=pre-wrap]\')?.textContent||\'\')" >ðŸ“‹ Copy Text</button>':'')+(url?'<button class="btn-sm" onclick="navigator.clipboard.writeText(\''+url+'\')">ðŸ”— Copy URL</button>':'')+'<button class="btn-sm" onclick="document.getElementById(\'resultBox\').style.display=\'none\'">ðŸ—‘ï¸ Dismiss</button></div></div>';
+}
+
+async function checkout() {
+  if (!selectedPack) return;
+  const btn = document.getElementById('checkoutBtn');
+  btn.textContent = 'Redirecting to PayPal...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(API+'/api/tokens/checkout', {
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({pack_id:selectedPack.id, payment_method:selectedPayment||'paypal'})
+    });
+    const data = await res.json();
+    if (data.approval_url) { window.location.href = data.approval_url; }
+    else { btn.textContent = data.error||'Error â€” try again'; btn.disabled = false; }
+  } catch(e) { btn.textContent = 'Error â€” try again'; btn.disabled = false; }
+}
+</script>
+</body>
+</html>
+
