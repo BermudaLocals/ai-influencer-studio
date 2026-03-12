@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Department — AI Influencer Studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg:       #090910;
+    --surface:  #10101a;
+    --border:   #1e1e2e;
+    --accent:   #ff3c6e;
+    --accent2:  #00e5ff;
+    --accent3:  #9b59f5;
+    --gold:     #f5a623;
+    --green:    #00e676;
+    --text:     #e8e8f0;
+    --muted:    #5a5a7a;
+    --card:     #12121f;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(9,9,16,0.95);
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .nav-tabs {
+    display: flex; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .nav-tab {
+    padding: 8px 18px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-tab.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* MAIN */
+  main { padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* GRID */
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 24px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.red::before   { background: var(--accent); }
+  .stat-card.cyan::before  { background: var(--accent2); }
+  .stat-card.purple::before{ background: var(--accent3); }
+  .stat-card.gold::before  { background: var(--gold); }
+  .stat-card.green::before { background: var(--green); }
+
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 1px; }
+  .stat-value.red    { color: var(--accent); }
+  .stat-value.cyan   { color: var(--accent2); }
+  .stat-value.purple { color: var(--accent3); }
+  .stat-value.gold   { color: var(--gold); }
+  .stat-value.green  { color: var(--green); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  /* FORM ELEMENTS */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 6px; }
+
+  input, textarea, select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+  select option { background: var(--surface); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #ff1a50; transform: translateY(-1px); }
+  .btn-cyan   { background: var(--accent2); color: #000; }
+  .btn-cyan:hover { opacity: 0.85; }
+  .btn-purple { background: var(--accent3); color: white; }
+  .btn-purple:hover { opacity: 0.85; }
+  .btn-gold   { background: var(--gold); color: #000; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* VIRAL SCORE METER */
+  .score-meter {
+    margin: 20px 0;
+    text-align: center;
+  }
+
+  .score-circle {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    position: relative;
+    font-family: 'Bebas Neue', sans-serif;
+  }
+
+  .score-number { font-size: 42px; line-height: 1; }
+  .score-label-sm { font-size: 11px; letter-spacing: 2px; color: var(--muted); }
+
+  .score-bars { display: grid; gap: 8px; margin-top: 16px; }
+
+  .score-bar-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .score-bar-label { font-size: 12px; color: var(--muted); width: 140px; text-align: right; }
+
+  .score-bar-track {
+    flex: 1; height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+
+  .score-bar-pct { font-size: 12px; color: var(--text); width: 36px; font-family: 'JetBrains Mono', monospace; }
+
+  /* TIPS */
+  .tips-list { margin-top: 12px; }
+  .tip-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255,60,110,0.08);
+    border: 1px solid rgba(255,60,110,0.2);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+
+  /* CALENDAR GRID */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7,1fr);
+    gap: 8px;
+  }
+
+  .cal-day-header {
+    text-align: center;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    padding: 8px 0;
+  }
+
+  .cal-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    min-height: 90px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .cal-cell:hover { border-color: var(--accent); }
+
+  .cal-date { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .cal-theme { font-size: 11px; font-weight: 600; color: var(--accent2); margin-bottom: 4px; }
+  .cal-platform {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(155,89,245,0.2);
+    color: var(--accent3);
+    margin: 2px 2px 0 0;
+  }
+
+  /* CLIPS */
+  .clips-list { display: grid; gap: 12px; }
+
+  .clip-card {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .clip-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    text-align: center;
+  }
+
+  .clip-info { }
+  .clip-hook { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .clip-meta { font-size: 11px; color: var(--muted); }
+
+  .clip-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .clip-score.high   { background: rgba(0,230,118,0.15); color: var(--green); }
+  .clip-score.medium { background: rgba(245,166,35,0.15); color: var(--gold); }
+  .clip-score.low    { background: rgba(255,60,110,0.15); color: var(--accent); }
+
+  /* SCHEDULE TABLE */
+  .schedule-table { width: 100%; border-collapse: collapse; }
+  .schedule-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .schedule-table td {
+    padding: 12px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(30,30,46,0.5);
+  }
+  .schedule-table tr:hover td { background: rgba(255,60,110,0.03); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-tiktok    { background: rgba(0,229,255,0.15); color: var(--accent2); }
+  .badge-instagram { background: rgba(155,89,245,0.15); color: var(--accent3); }
+  .badge-youtube   { background: rgba(255,60,110,0.15); color: var(--accent); }
+  .badge-scheduled { background: rgba(245,166,35,0.15); color: var(--gold); }
+  .badge-posted    { background: rgba(0,230,118,0.15); color: var(--green); }
+  .badge-failed    { background: rgba(255,60,110,0.15); color: var(--accent); }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PREDICTION GRID */
+  .prediction-grid {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .pred-card {
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 8px;
+  }
+  .pred-value { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent2); }
+  .pred-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 4px; }
+
+  /* RESPONSIVE */
+  @media (max-width:768px) {
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .prediction-grid { grid-template-columns: repeat(3,1fr); }
+    .calendar-grid { grid-template-columns: repeat(4,1fr); }
+    main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MARKETING DEPT</div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showPanel('viral')">🔥 Viral Score</button>
+    <button class="nav-tab" onclick="showPanel('calendar')">📅 Calendar</button>
+    <button class="nav-tab" onclick="showPanel('clips')">✂️ Clip Video</button>
+    <button class="nav-tab" onclick="showPanel('schedule')">📤 Schedule</button>
+  </nav>
+  <div class="status-dot" title="API Live"></div>
+</header>
+
+<main>
+
+  <!-- OVERVIEW STATS -->
+  <div class="grid-3" id="statsRow">
+    <div class="stat-card red">
+      <div class="stat-label">Posts Scheduled</div>
+      <div class="stat-value red" id="totalScheduled">—</div>
+      <div class="stat-sub">across all creators</div>
+    </div>
+    <div class="stat-card cyan">
+      <div class="stat-label">Clips Generated</div>
+      <div class="stat-value cyan" id="totalClips">—</div>
+      <div class="stat-sub">ready to post</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Avg Viral Score</div>
+      <div class="stat-value green" id="avgViral">—</div>
+      <div class="stat-sub">content quality index</div>
+    </div>
+  </div>
+
+  <!-- VIRAL SCORE PANEL -->
+  <div class="panel active" id="panel-viral">
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">VIRAL SCORE ANALYZER</div>
+        </div>
+
+        <div class="form-row full">
+          <div>
+            <label>Hook (First 3 Seconds)</label>
+            <input type="text" id="vs-hook" placeholder="POV: You just discovered the secret nobody talks about..." />
+          </div>
+        </div>
+        <div class="form-row full">
+          <div>
+            <label>Caption</label>
+            <textarea id="vs-caption" placeholder="Drop a 🔥 if you relate! Follow for daily tips..."></textarea>
+          </div>
+        </div>
+        <div class="form-row three">
+          <div>
+            <label>Niche</label>
+            <select id="vs-niche">
+              <option value="fitness">Fitness</option>
+              <option value="beauty">Beauty</option>
+              <option value="finance">Finance</option>
+              <option value="music">Music</option>
+              <option value="gaming">Gaming</option>
+              <option value="adult">Adult/Creator</option>
+            </select>
+          </div>
+          <div>
+            <label>Duration (seconds)</label>
+            <input type="number" id="vs-duration" placeholder="15" value="15" />
+          </div>
+          <div>
+            <label>Hashtags (comma separated)</label>
+            <input type="text" id="vs-hashtags" placeholder="#fyp, #viral, #fitness" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="scoreViral()" style="width:100%;margin-top:8px">
+          🔥 ANALYZE VIRAL POTENTIAL
+        </button>
+      </div>
+
+      <div class="card" id="viralResult">
+        <div class="section-title" style="margin-bottom:16px">RESULTS</div>
+        <div class="loading" id="viralLoading" style="display:none">
+          <div class="spinner"></div>Analyzing...
+        </div>
+        <div id="viralOutput" style="display:none">
+          <div class="score-meter">
+            <div class="score-circle" id="scoreCircle">
+              <div class="score-number" id="scoreNum">—</div>
+              <div class="score-label-sm">VIRAL SCORE</div>
+            </div>
+            <div id="anomalyBadge"></div>
+          </div>
+
+          <div class="score-bars" id="scoreBars"></div>
+
+          <div class="prediction-grid" id="predGrid"></div>
+
+          <div class="tips-list" id="tipsList"></div>
+        </div>
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:40px 0" id="viralPlaceholder">
+          Enter content details and click Analyze
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDAR PANEL -->
+  <div class="panel" id="panel-calendar">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">CONTENT CALENDAR</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="cal-creator-id" placeholder="Creator ID" style="width:160px" />
+          <select id="cal-weeks" style="width:100px">
+            <option value="2">2 Weeks</option>
+            <option value="4" selected>4 Weeks</option>
+            <option value="8">8 Weeks</option>
+          </select>
+          <button class="btn btn-primary" onclick="generateCalendar()">Generate</button>
+          <button class="btn btn-outline" onclick="bulkCalendar()">All Creators</button>
+        </div>
+      </div>
+
+      <div id="calendarOutput">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:40px 0">
+          Enter a Creator ID and click Generate to build a content calendar
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIP VIDEO PANEL -->
+  <div class="panel" id="panel-clips">
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:16px">CLIP LONG VIDEO → SHORTS</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+          Paste a video URL — AI finds the best viral moments and cuts them into TikTok/Reels/Shorts
+        </p>
+
+        <div class="form-row full">
+          <div>
+            <label>Video URL</label>
+            <input type="url" id="clip-url" placeholder="https://youtu.be/... or direct .mp4 link" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label>Creator ID (optional)</label>
+            <input type="text" id="clip-creator" placeholder="creator_id" />
+          </div>
+          <div>
+            <label>Niche</label>
+            <select id="clip-niche">
+              <option value="fitness">Fitness</option>
+              <option value="beauty">Beauty</option>
+              <option value="finance">Finance</option>
+              <option value="music">Music</option>
+              <option value="gaming">Gaming</option>
+              <option value="adult">Adult/Creator</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label>Clip Duration (seconds)</label>
+            <input type="number" id="clip-duration" value="15" />
+          </div>
+          <div>
+            <label>Target Platforms</label>
+            <select id="clip-platforms" multiple style="height:70px">
+              <option value="tiktok" selected>TikTok</option>
+              <option value="instagram_reels" selected>Instagram Reels</option>
+              <option value="youtube_shorts" selected>YouTube Shorts</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-cyan" onclick="clipVideo()" style="width:100%;margin-top:8px;color:#000">
+          ✂️ GENERATE VIRAL CLIPS
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:16px">CLIPS OUTPUT</div>
+        <div class="loading" id="clipLoading" style="display:none">
+          <div class="spinner"></div>
+          Analyzing video & detecting viral moments...
+        </div>
+        <div class="clips-list" id="clipsOutput">
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:40px 0">
+            Clips will appear here after processing
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE PANEL -->
+  <div class="panel" id="panel-schedule">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">SCHEDULED POSTS</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="sched-creator-id" placeholder="Creator ID" style="width:160px" />
+          <select id="sched-days" style="width:100px">
+            <option value="7">7 Days</option>
+            <option value="14">14 Days</option>
+            <option value="30">30 Days</option>
+          </select>
+          <button class="btn btn-primary" onclick="loadSchedule()">Load</button>
+        </div>
+      </div>
+
+      <div id="scheduleOutput">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:40px 0">
+          Enter a Creator ID to view their scheduled posts
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://ai-influencer-studio-production.up.railway.app';
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── VIRAL SCORE ───────────────────────────────────────────────────────────────
+async function scoreViral() {
+  const hook     = document.getElementById('vs-hook').value.trim();
+  const caption  = document.getElementById('vs-caption').value.trim();
+  const niche    = document.getElementById('vs-niche').value;
+  const duration = parseInt(document.getElementById('vs-duration').value) || 15;
+  const hashtagStr = document.getElementById('vs-hashtags').value;
+  const hashtags = hashtagStr.split(',').map(h => h.trim()).filter(Boolean);
+
+  document.getElementById('viralPlaceholder').style.display = 'none';
+  document.getElementById('viralOutput').style.display = 'none';
+  document.getElementById('viralLoading').style.display = 'block';
+
+  try {
+    const res = await fetch(`${API}/api/marketing/viral-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hook, caption, niche, duration_seconds: duration, hashtags })
+    });
+    const data = await res.json();
+
+    document.getElementById('viralLoading').style.display = 'none';
+    document.getElementById('viralOutput').style.display = 'block';
+
+    const score = data.viral_score || 0;
+    const circle = document.getElementById('scoreCircle');
+    const colors = score >= 70 ? '#00e676' : score >= 50 ? '#f5a623' : '#ff3c6e';
+    circle.style.background = `conic-gradient(${colors} ${score * 3.6}deg, var(--border) 0deg)`;
+    circle.style.boxShadow  = `0 0 30px ${colors}40`;
+    document.getElementById('scoreNum').style.color = colors;
+    document.getElementById('scoreNum').textContent = score;
+
+    const anomalyColors = { VIRAL_SPIKE:'var(--green)', ENGAGEMENT_BUBBLE:'var(--accent2)', HIGH_RETENTION:'var(--gold)', STANDARD:'var(--muted)' };
+    document.getElementById('anomalyBadge').innerHTML = `
+      <span style="font-size:12px;color:${anomalyColors[data.anomaly_type]||'var(--muted)'};display:block;text-align:center;margin-top:8px">
+        ${data.anomaly_type || 'STANDARD'}
+      </span>`;
+
+    const barLabels = { hook_strength:'Hook Strength', caption_quality:'Caption Quality', hashtag_relevance:'Hashtag Fit', duration_fit:'Duration Fit', trend_alignment:'Trend Alignment' };
+    const barsHtml = Object.entries(data.scores || {}).map(([k,v]) => {
+      const pct = Math.round(v * 100);
+      const col = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--gold)' : 'var(--accent)';
+      return `<div class="score-bar-row">
+        <div class="score-bar-label">${barLabels[k]||k}</div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+        <div class="score-bar-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+    document.getElementById('scoreBars').innerHTML = barsHtml;
+
+    const pe = data.predicted_engagement || {};
+    document.getElementById('predGrid').innerHTML = [
+      ['Views', pe.views?.toLocaleString()],
+      ['Likes', pe.likes?.toLocaleString()],
+      ['Comments', pe.comments?.toLocaleString()],
+      ['Shares', pe.shares?.toLocaleString()],
+      ['New Followers', pe.followers_gained?.toLocaleString()]
+    ].map(([label,val]) => `
+      <div class="pred-card">
+        <div class="pred-value">${val||'—'}</div>
+        <div class="pred-label">${label}</div>
+      </div>`).join('');
+
+    const tips = data.recommendation || [];
+    document.getElementById('tipsList').innerHTML = tips.map(t =>
+      `<div class="tip-item">💡 ${t}</div>`
+    ).join('');
+
+    document.getElementById('avgViral').textContent = score;
+  } catch(e) {
+    document.getElementById('viralLoading').style.display = 'none';
+    document.getElementById('viralPlaceholder').style.display = 'block';
+    document.getElementById('viralPlaceholder').textContent = `Error: ${e.message}`;
+  }
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
+async function generateCalendar() {
+  const creatorId = document.getElementById('cal-creator-id').value.trim();
+  const weeks = parseInt(document.getElementById('cal-weeks').value);
+  if (!creatorId) { alert('Enter a Creator ID'); return; }
+
+  document.getElementById('calendarOutput').innerHTML = '<div class="loading"><div class="spinner"></div>Generating calendar...</div>';
+
+  try {
+    const res = await fetch(`${API}/api/marketing/calendar/${creatorId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weeks })
+    });
+    const data = await res.json();
+    renderCalendar(data.calendar);
+    document.getElementById('totalScheduled').textContent = data.total_posts?.toLocaleString() || '—';
+  } catch(e) {
+    document.getElementById('calendarOutput').innerHTML = `<div style="color:var(--accent);padding:20px">Error: ${e.message}</div>`;
+  }
+}
+
+async function bulkCalendar() {
+  if (!confirm('Generate calendars for ALL active creators?')) return;
+  document.getElementById('calendarOutput').innerHTML = '<div class="loading"><div class="spinner"></div>Processing all creators...</div>';
+
+  const res = await fetch(`${API}/api/marketing/calendar-all`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': 'AgentZero2025!' },
+    body: JSON.stringify({ weeks: 4 })
+  });
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let done = false;
+  while (!done) {
+    const { value, done: d } = await reader.read();
+    done = d;
+    if (value) {
+      const lines = decoder.decode(value).split('\n').filter(l => l.startsWith('data:'));
+      lines.forEach(l => {
+        try {
+          const evt = JSON.parse(l.replace('data:',''));
+          if (evt.complete) {
+            document.getElementById('calendarOutput').innerHTML = `<div style="color:var(--green);padding:20px;font-size:18px">✅ Done! ${evt.total_creators} creators scheduled</div>`;
+          } else {
+            document.getElementById('calendarOutput').innerHTML = `<div class="loading"><div class="spinner"></div>${evt.done}/${evt.total}: ${evt.creator}</div>`;
+          }
+        } catch {}
+      });
+    }
+  }
+}
+
+function renderCalendar(calendar) {
+  if (!calendar?.length) {
+    document.getElementById('calendarOutput').innerHTML = '<div style="color:var(--muted);padding:20px">No calendar data</div>';
+    return;
+  }
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html = '';
+  calendar.forEach(week => {
+    html += `<div style="margin-bottom:24px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">WEEK ${week.week}</div>
+      <div class="calendar-grid">
+        ${days.map(d => `<div class="cal-day-header">${d}</div>`).join('')}
+        ${week.posts.map(post => `
+          <div class="cal-cell">
+            <div class="cal-date">${post.date}</div>
+            <div class="cal-theme">${post.theme}</div>
+            <div style="font-size:11px;color:var(--muted);margin:4px 0">${post.time}</div>
+            ${(post.platforms||[]).map(p => `<span class="cal-platform">${p}</span>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  document.getElementById('calendarOutput').innerHTML = html;
+}
+
+// ── CLIP VIDEO ────────────────────────────────────────────────────────────────
+async function clipVideo() {
+  const url       = document.getElementById('clip-url').value.trim();
+  const creatorId = document.getElementById('clip-creator').value.trim();
+  const niche     = document.getElementById('clip-niche').value;
+  const duration  = parseInt(document.getElementById('clip-duration').value) || 15;
+  const platforms = Array.from(document.getElementById('clip-platforms').selectedOptions).map(o => o.value);
+
+  if (!url) { alert('Enter a video URL'); return; }
+
+  document.getElementById('clipLoading').style.display = 'block';
+  document.getElementById('clipsOutput').innerHTML = '';
+
+  try {
+    const res = await fetch(`${API}/api/marketing/clip-video`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': 'AgentZero2025!' },
+      body: JSON.stringify({ video_url: url, creator_id: creatorId, niche, target_duration: duration, platforms })
+    });
+    const data = await res.json();
+    document.getElementById('clipLoading').style.display = 'none';
+    document.getElementById('totalClips').textContent = data.clips_generated || 0;
+    renderClips(data.clips || []);
+  } catch(e) {
+    document.getElementById('clipLoading').style.display = 'none';
+    document.getElementById('clipsOutput').innerHTML = `<div style="color:var(--accent)">Error: ${e.message}</div>`;
+  }
+}
+
+function renderClips(clips) {
+  if (!clips.length) {
+    document.getElementById('clipsOutput').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">No clips generated</div>';
+    return;
+  }
+  document.getElementById('clipsOutput').innerHTML = clips.map(clip => {
+    const scoreClass = clip.viral_score >= 70 ? 'high' : clip.viral_score >= 50 ? 'medium' : 'low';
+    return `<div class="clip-card">
+      <div class="clip-number">#${clip.clip_number}</div>
+      <div class="clip-info">
+        <div class="clip-hook">${clip.hook}</div>
+        <div class="clip-meta">${clip.start_time}s – ${clip.end_time}s · ${clip.duration}s · ${(clip.platforms||[]).join(', ')}</div>
+      </div>
+      <div class="clip-score ${scoreClass}">${clip.viral_score}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── SCHEDULE ──────────────────────────────────────────────────────────────────
+async function loadSchedule() {
+  const creatorId = document.getElementById('sched-creator-id').value.trim();
+  const days = document.getElementById('sched-days').value;
+  if (!creatorId) { alert('Enter a Creator ID'); return; }
+
+  document.getElementById('scheduleOutput').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+  try {
+    const res = await fetch(`${API}/api/marketing/scheduled/${creatorId}?days=${days}`);
+    const data = await res.json();
+    renderSchedule(data.posts || []);
+  } catch(e) {
+    document.getElementById('scheduleOutput').innerHTML = `<div style="color:var(--accent);padding:20px">Error: ${e.message}</div>`;
+  }
+}
+
+function renderSchedule(posts) {
+  if (!posts.length) {
+    document.getElementById('scheduleOutput').innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px">No scheduled posts found</div>';
+    return;
+  }
+  const rows = posts.map(p => {
+    const content = typeof p.content === 'string' ? JSON.parse(p.content) : p.content;
+    return `<tr>
+      <td>${new Date(p.scheduled_time).toLocaleDateString()} ${new Date(p.scheduled_time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
+      <td><span class="badge badge-${p.platform}">${p.platform}</span></td>
+      <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${content?.theme || content?.caption || '—'}</td>
+      <td><span class="badge badge-${p.status}">${p.status}</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('scheduleOutput').innerHTML = `
+    <table class="schedule-table">
+      <thead><tr>
+        <th>Time</th><th>Platform</th><th>Content</th><th>Status</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+</script>
+</body>
+</html>
