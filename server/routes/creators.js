@@ -1,12 +1,12 @@
-/**
+﻿/**
  * CREATOR ROUTES
- * POST /api/creators/process-all  — bulk process all creators (images + GlowX + Fanvue)
- * GET  /api/creators              — list all creators
- * GET  /api/creators/:id          — get single creator with full profile
- * POST /api/creators/generate-images/:id  — regenerate images for one creator
- * GET  /api/creators/schedule     — full posting schedule for all creators
- * GET  /api/creators/fanvue-export — export all Fanvue setup data as JSON
- * POST /api/creators/load-folder  — load creators from C:\ADULT_CREATORS_70_COMPLETE
+ * POST /api/creators/process-all  â€” bulk process all creators (images + GlowX + Fanvue)
+ * GET  /api/creators              â€” list all creators
+ * GET  /api/creators/:id          â€” get single creator with full profile
+ * POST /api/creators/generate-images/:id  â€” regenerate images for one creator
+ * GET  /api/creators/schedule     â€” full posting schedule for all creators
+ * GET  /api/creators/fanvue-export â€” export all Fanvue setup data as JSON
+ * POST /api/creators/load-folder  â€” load creators from C:\ADULT_CREATORS_70_COMPLETE
  */
 const router  = require('express').Router();
 const jwt     = require('jsonwebtoken');
@@ -30,7 +30,7 @@ function adminAuth(req, res, next) {
   catch { res.status(401).json({ error: 'Unauthorized' }); }
 }
 
-// ── GET ALL CREATORS ──────────────────────────────────────────────────────────
+// â”€â”€ GET ALL CREATORS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/', async (req, res) => {
   try {
     const { content_type, niche, status = 'active' } = req.query;
@@ -45,30 +45,35 @@ router.get('/', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── GET SINGLE CREATOR ────────────────────────────────────────────────────────
+// â”€â”€ GET SINGLE CREATOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/:id', async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM creators WHERE id=$1', [req.params.id]);
     if (!r.rows[0]) return res.status(404).json({ error: 'Creator not found' });
     const c = r.rows[0];
+    function safeParse(val, fallback) {
+      if (val === null || val === undefined) return fallback;
+      if (typeof val === "object") return val;
+      try { return JSON.parse(val); } catch { return fallback; }
+    }
     res.json({
       ...c,
-      profile_data:  JSON.parse(c.profile_data  || '{}'),
-      image_urls:    JSON.parse(c.image_urls     || '[]'),
-      fanvue_profile: JSON.parse(c.fanvue_profile || '{}'),
-      posting_schedule: c.posting_schedule ? JSON.parse(c.posting_schedule) : null
+      profile_data:     safeParse(c.profile_data, {}),
+      image_urls:       safeParse(c.image_urls, []),
+      fanvue_profile:   safeParse(c.fanvue_profile, {}),
+      posting_schedule: safeParse(c.posting_schedule, null)
     });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── LOAD CREATORS FROM LOCAL FOLDER ──────────────────────────────────────────
+// â”€â”€ LOAD CREATORS FROM LOCAL FOLDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // POST /api/creators/load-folder
 // body: { folder: "C:\\ADULT_CREATORS_70_COMPLETE", content_type: "adult" }
 router.post('/load-folder', adminAuth, async (req, res) => {
   const { folder, content_type = 'sfw' } = req.body;
   if (!folder) return res.status(400).json({ error: 'folder required' });
 
-  // This endpoint is called from local machine — expects creators JSON array
+  // This endpoint is called from local machine â€” expects creators JSON array
   // When called from Railway, creators are passed in body directly
   const { creators } = req.body;
   if (creators && Array.isArray(creators)) {
@@ -94,7 +99,7 @@ router.post('/load-folder', adminAuth, async (req, res) => {
   res.json({ message: 'Pass creators array in body', example: '{ creators: [...], content_type: "adult" }' });
 });
 
-// ── PROCESS ALL CREATORS (images + GlowX + Fanvue) ───────────────────────────
+// â”€â”€ PROCESS ALL CREATORS (images + GlowX + Fanvue) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // POST /api/creators/process-all
 // body: { content_type: "all"|"sfw"|"adult", generate_images: true, upload_glowx: true, concurrency: 2 }
 router.post('/process-all', adminAuth, async (req, res) => {
@@ -179,7 +184,7 @@ router.post('/process-all', adminAuth, async (req, res) => {
   }
 });
 
-// ── GENERATE IMAGES FOR ONE CREATOR ──────────────────────────────────────────
+// â”€â”€ GENERATE IMAGES FOR ONE CREATOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/generate-images/:id', adminAuth, async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM creators WHERE id=$1', [req.params.id]);
@@ -193,7 +198,7 @@ router.post('/generate-images/:id', adminAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── GET POSTING SCHEDULE ──────────────────────────────────────────────────────
+// â”€â”€ GET POSTING SCHEDULE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/schedule/all', async (req, res) => {
   try {
     const r = await pool.query('SELECT id, name, niche, posting_schedule FROM creators WHERE status=\'active\'');
@@ -208,7 +213,7 @@ router.get('/schedule/all', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── EXPORT ALL FANVUE PROFILES ────────────────────────────────────────────────
+// â”€â”€ EXPORT ALL FANVUE PROFILES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/fanvue-export/all', adminAuth, async (req, res) => {
   try {
     const r = await pool.query('SELECT id, name, niche, content_type, image_urls, fanvue_profile FROM creators WHERE status=\'active\' ORDER BY name');
@@ -221,7 +226,7 @@ router.get('/fanvue-export/all', adminAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── GET REVENUE SUMMARY ───────────────────────────────────────────────────────
+// â”€â”€ GET REVENUE SUMMARY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/revenue/summary', adminAuth, async (req, res) => {
   try {
     const r = await pool.query(`
@@ -244,3 +249,4 @@ router.get('/revenue/summary', adminAuth, async (req, res) => {
 });
 
 module.exports = router;
+
