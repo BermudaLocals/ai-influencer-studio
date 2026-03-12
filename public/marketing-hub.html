@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Department — AI Influencer Studio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg:      #090910;
+  --surface: #10101a;
+  --border:  #1e1e2e;
+  --accent:  #ff3c6e;
+  --accent2: #00e5ff;
+  --accent3: #9b59f5;
+  --gold:    #f5a623;
+  --green:   #00e676;
+  --text:    #e8e8f0;
+  --muted:   #5a5a7a;
+  --card:    #12121f;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+
+/* GLOBAL PROGRESS BAR */
+#globalProgress {
+  position:fixed; top:0; left:0; right:0; height:3px; z-index:9999;
+  background: var(--border);
+  display:none;
+}
+#globalProgressFill {
+  height:100%; width:0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent3), var(--accent2));
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* ACTIVITY TOAST */
+#activityToast {
+  position:fixed; bottom:24px; right:24px; z-index:9998;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:16px 20px; min-width:300px;
+  display:none; box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+.toast-title { font-family:'Bebas Neue'; font-size:16px; letter-spacing:2px; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.toast-bar-track { height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-bottom:6px; }
+.toast-bar-fill { height:100%; border-radius:2px; transition:width 0.4s ease; background:linear-gradient(90deg,var(--accent),var(--accent3)); }
+.toast-msg { font-size:12px; color:var(--muted); }
+
+/* HEADER */
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 32px; height:60px;
+  border-bottom:1px solid var(--border);
+  background:rgba(9,9,16,0.97);
+  position:sticky; top:0; z-index:100;
+  backdrop-filter:blur(12px);
+}
+
+.logo {
+  font-family:'Bebas Neue'; font-size:22px; letter-spacing:3px;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  display:flex; align-items:center; gap:10px;
+}
+
+.live-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 2s infinite; -webkit-text-fill-color:initial; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.nav-tabs {
+  display:flex; gap:3px;
+  background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px;
+}
+
+.nav-tab {
+  padding:7px 16px; border-radius:7px; border:none;
+  background:transparent; color:var(--muted);
+  font-family:'DM Sans'; font-size:13px; font-weight:500; cursor:pointer;
+  transition:all 0.2s; white-space:nowrap;
+}
+.nav-tab:hover { color:var(--text); }
+.nav-tab.active { background:var(--accent); color:#fff; }
+
+/* MAIN */
+main { padding:28px 32px; max-width:1440px; margin:0 auto; }
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* SECTION HEADER */
+.sec-head { display:flex; align-items:baseline; gap:14px; margin-bottom:20px; }
+.sec-title { font-family:'Bebas Neue'; font-size:24px; letter-spacing:2px; }
+.sec-sub { font-size:13px; color:var(--muted); }
+
+/* GRIDS */
+.g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.g3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+.g2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:20px; }
+
+/* STAT CARDS */
+.stat {
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:18px 22px; position:relative; overflow:hidden;
+}
+.stat::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.stat.r::before { background:var(--accent); }
+.stat.c::before { background:var(--accent2); }
+.stat.p::before { background:var(--accent3); }
+.stat.g::before { background:var(--gold); }
+.stat.gr::before { background:var(--green); }
+.stat-lbl { font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--muted); margin-bottom:6px; }
+.stat-val { font-family:'Bebas Neue'; font-size:36px; }
+.stat-val.r  { color:var(--accent); }
+.stat-val.c  { color:var(--accent2); }
+.stat-val.p  { color:var(--accent3); }
+.stat-val.g  { color:var(--gold); }
+.stat-val.gr { color:var(--green); }
+.stat-sub { font-size:12px; color:var(--muted); margin-top:3px; }
+
+/* STAT MINI PROGRESS */
+.stat-prog { margin-top:10px; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+.stat-prog-fill { height:100%; border-radius:2px; transition:width 1.2s ease; }
+
+/* CARD */
+.card {
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:22px; margin-bottom:18px;
+}
+.card-title { font-family:'Bebas Neue'; font-size:16px; letter-spacing:2px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+/* INLINE PROGRESS (inside cards) */
+.activity-bar {
+  margin:12px 0;
+  display:none;
+}
+.activity-bar.visible { display:block; }
+.ab-label { font-size:11px; color:var(--muted); margin-bottom:5px; display:flex; justify-content:space-between; }
+.ab-track { height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.ab-fill { height:100%; border-radius:3px; transition:width 0.4s ease; }
+.ab-fill.accent  { background:linear-gradient(90deg,var(--accent),var(--accent3)); }
+.ab-fill.cyan    { background:linear-gradient(90deg,var(--accent2),var(--green)); }
+.ab-fill.gold    { background:var(--gold); }
+.ab-steps { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.ab-step {
+  padding:4px 10px; border-radius:6px; font-size:11px; font-weight:500;
+  background:var(--surface); border:1px solid var(--border); color:var(--muted);
+  transition:all 0.3s;
+}
+.ab-step.done { background:rgba(0,230,118,0.1); border-color:var(--green); color:var(--green); }
+.ab-step.active { background:rgba(255,60,110,0.15); border-color:var(--accent); color:var(--accent); animation:stepPulse 1s infinite; }
+@keyframes stepPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+/* FORMS */
+label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:5px; }
+input, textarea, select {
+  width:100%; background:var(--surface); border:1px solid var(--border);
+  border-radius:8px; padding:10px 14px; color:var(--text);
+  font-family:'DM Sans'; font-size:14px; outline:none; transition:border-color 0.2s;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--accent); }
+textarea { resize:vertical; min-height:80px; }
+select option { background:var(--surface); }
+.fr { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.fr.full { grid-template-columns:1fr; }
+.fr.three { grid-template-columns:1fr 1fr 1fr; }
+
+/* BUTTONS */
+.btn {
+  padding:10px 20px; border-radius:8px; border:none;
+  font-family:'DM Sans'; font-size:13px; font-weight:600; cursor:pointer;
+  transition:all 0.2s; display:inline-flex; align-items:center; gap:7px;
+}
+.btn-r  { background:var(--accent); color:#fff; }
+.btn-r:hover { background:#ff1a50; transform:translateY(-1px); }
+.btn-c  { background:var(--accent2); color:#000; }
+.btn-c:hover { opacity:0.85; }
+.btn-p  { background:var(--accent3); color:#fff; }
+.btn-g  { background:var(--gold); color:#000; }
+.btn-gr { background:var(--green); color:#000; }
+.btn-o  { background:transparent; border:1px solid var(--border); color:var(--text); }
+.btn-o:hover { border-color:var(--accent); color:var(--accent); }
+.btn-sm { padding:7px 14px; font-size:12px; }
+
+/* PLATFORMS */
+.plat-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px; }
+.plat-card {
+  background:var(--surface); border:2px solid var(--border); border-radius:12px;
+  padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.2s; position:relative;
+}
+.plat-card:hover { border-color:var(--muted); transform:translateY(-2px); }
+.plat-card.on { border-color:var(--accent); background:rgba(255,60,110,0.08); }
+.plat-card.on::after { content:'✓'; position:absolute; top:7px; right:9px; font-size:10px; color:var(--accent); font-weight:700; }
+.plat-icon { font-size:26px; display:block; margin-bottom:7px; }
+.plat-name { font-family:'Bebas Neue'; font-size:13px; letter-spacing:1px; }
+.plat-stat { font-size:10px; color:var(--muted); margin-top:2px; }
+
+/* NICHE TAGS */
+.niche-wrap { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; }
+.niche-tag {
+  padding:7px 15px; border-radius:100px; border:1.5px solid var(--border);
+  background:var(--surface); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s;
+}
+.niche-tag:hover { border-color:var(--muted); }
+.niche-tag.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+/* CONTENT FEED */
+.feed { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.feed-item {
+  background:var(--surface); border:1px solid var(--border); border-radius:12px;
+  overflow:hidden; cursor:pointer; transition:transform 0.2s;
+}
+.feed-item:hover { transform:translateY(-3px); border-color:var(--accent); }
+.feed-thumb {
+  height:130px; background:linear-gradient(135deg,#1a1a2e,#16213e);
+  display:flex; align-items:center; justify-content:center; font-size:42px;
+  position:relative;
+}
+.feed-badges { position:absolute; bottom:8px; left:8px; display:flex; gap:4px; }
+.feed-score { position:absolute; top:8px; right:8px; background:var(--accent); color:#fff; font-family:'Bebas Neue'; font-size:16px; padding:3px 8px; border-radius:6px; }
+.feed-body { padding:12px; }
+.feed-hook { font-size:13px; font-weight:500; margin-bottom:6px; line-height:1.4; }
+.feed-meta { font-size:11px; color:var(--muted); display:flex; gap:10px; margin-bottom:10px; }
+
+/* VIRAL SCORE */
+.score-circle {
+  width:120px; height:120px; border-radius:50%;
+  margin:0 auto 12px;
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+}
+.score-num { font-family:'Bebas Neue'; font-size:46px; line-height:1; }
+.score-lbl { font-size:11px; letter-spacing:2px; color:var(--muted); }
+.score-bars { display:grid; gap:8px; margin-top:14px; }
+.sbar { display:flex; align-items:center; gap:10px; }
+.sbar-name { font-size:12px; color:var(--muted); width:130px; text-align:right; }
+.sbar-track { flex:1; height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.sbar-fill { height:100%; border-radius:3px; transition:width 0.8s ease; }
+.sbar-pct { font-family:'JetBrains Mono'; font-size:11px; width:34px; }
+.pred-row { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:14px; }
+.pred-box { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 6px; text-align:center; }
+.pred-val { font-family:'Bebas Neue'; font-size:20px; color:var(--accent); }
+.pred-lbl { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-top:2px; }
+
+/* CALENDAR */
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:7px; }
+.cal-head { text-align:center; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); padding:6px 0; }
+.cal-cell {
+  background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  padding:9px; min-height:88px; cursor:pointer; transition:border-color 0.2s;
+}
+.cal-cell:hover { border-color:var(--accent); }
+.cal-date { font-size:10px; color:var(--muted); }
+.cal-theme { font-size:11px; font-weight:600; color:var(--accent2); margin:3px 0; }
+.cal-badge { display:inline-block; font-size:9px; padding:2px 6px; border-radius:4px; background:rgba(155,89,245,0.2); color:var(--accent3); margin:1px; }
+
+/* DIGITAL TOOLS */
+.tools-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.tool-card {
+  background:var(--card); border:1.5px solid var(--border); border-radius:12px;
+  padding:18px; cursor:pointer; transition:all 0.2s;
+}
+.tool-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+.tool-card.on { border-color:var(--accent); background:rgba(255,60,110,0.06); }
+.tool-icon { font-size:26px; margin-bottom:8px; }
+.tool-name { font-family:'Bebas Neue'; font-size:15px; letter-spacing:1.5px; margin-bottom:4px; }
+.tool-desc { font-size:12px; color:var(--muted); line-height:1.4; }
+
+/* OUTPUT BOXES */
+.out-box {
+  background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  padding:14px; margin-top:14px;
+}
+.out-item {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:11px 0; border-bottom:1px solid var(--border); font-size:13px;
+}
+.out-item:last-child { border-bottom:none; }
+
+/* SCHEDULE TABLE */
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); border-bottom:1px solid var(--border); }
+td { padding:11px 14px; font-size:13px; border-bottom:1px solid rgba(30,30,46,0.5); }
+tr:hover td { background:rgba(255,60,110,0.03); }
+.badge { display:inline-block; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:600; }
+.bd-tiktok    { background:#000; color:#fff; }
+.bd-instagram { background:linear-gradient(135deg,#f09433,#dc2743,#bc1888); color:#fff; }
+.bd-youtube   { background:#ff0000; color:#fff; }
+.bd-twitter   { background:#1da1f2; color:#fff; }
+.bd-fanvue    { background:var(--accent3); color:#fff; }
+.bd-glowx     { background:linear-gradient(135deg,var(--accent),var(--accent3)); color:#fff; }
+.bd-scheduled { background:rgba(245,166,35,0.2); color:var(--gold); border:1px solid rgba(245,166,35,0.3); }
+.bd-posted    { background:rgba(0,230,118,0.15); color:var(--green); border:1px solid rgba(0,230,118,0.3); }
+
+/* LOADER */
+.loader { text-align:center; padding:40px; color:var(--muted); }
+.spin { width:30px; height:30px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 10px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* TREND ITEMS */
+.trend-item { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--border); }
+.trend-rank { font-family:'Bebas Neue'; font-size:22px; color:var(--border); width:28px; text-align:right; }
+.trend-rank.hot { color:var(--accent); }
+.trend-info { flex:1; }
+.trend-title { font-weight:600; font-size:13px; margin-bottom:2px; }
+.trend-meta { font-size:11px; color:var(--muted); }
+.trend-score { font-family:'JetBrains Mono'; font-size:13px; padding:3px 10px; border-radius:6px; background:var(--surface); border:1px solid var(--border); }
+
+/* RESPONSIVE */
+@media (max-width:1100px) { .plat-grid { grid-template-columns:repeat(3,1fr); } .tools-grid { grid-template-columns:repeat(2,1fr); } .g4 { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:768px) { main { padding:16px; } header { padding:0 16px; } .feed { grid-template-columns:1fr; } .pred-row { grid-template-columns:repeat(3,1fr); } .g2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<!-- GLOBAL PROGRESS BAR -->
+<div id="globalProgress"><div id="globalProgressFill"></div></div>
+
+<!-- ACTIVITY TOAST -->
+<div id="activityToast">
+  <div class="toast-title"><span id="toastIcon">⚙️</span><span id="toastTitle">Processing</span></div>
+  <div class="toast-bar-track"><div class="toast-bar-fill" id="toastBarFill" style="width:0%"></div></div>
+  <div class="toast-msg" id="toastMsg">Starting...</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="live-dot"></div>
+    EMPIRE · MARKETING HQ
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('overview',this)">Overview</button>
+    <button class="nav-tab" onclick="showTab('platforms',this)">Platforms</button>
+    <button class="nav-tab" onclick="showTab('content',this)">Content</button>
+    <button class="nav-tab" onclick="showTab('viral',this)">Viral Score</button>
+    <button class="nav-tab" onclick="showTab('calendar',this)">Calendar</button>
+    <button class="nav-tab" onclick="showTab('tools',this)">Digital Tools</button>
+    <button class="nav-tab" onclick="showTab('schedule',this)">Scheduler</button>
+  </nav>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span style="font-size:12px;color:var(--muted)" id="hdr-creators">75 creators</span>
+    <span style="font-size:12px;color:var(--green)">● LIVE</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ════════════════════════════════════ OVERVIEW -->
+<div class="panel active" id="panel-overview">
+  <div class="sec-head"><div class="sec-title">Marketing Overview</div><div class="sec-sub">Empire performance at a glance</div></div>
+  <div class="g4">
+    <div class="stat r">
+      <div class="stat-lbl">Active Creators</div>
+      <div class="stat-val r" id="ov-creators">75</div>
+      <div class="stat-sub">18+ verified · adult + SFW</div>
+      <div class="stat-prog"><div class="stat-prog-fill" style="width:75%;background:var(--accent)"></div></div>
+    </div>
+    <div class="stat c">
+      <div class="stat-lbl">Posts Scheduled</div>
+      <div class="stat-val c" id="ov-scheduled">—</div>
+      <div class="stat-sub">next 28 days</div>
+      <div class="stat-prog"><div class="stat-prog-fill" id="ov-sched-bar" style="width:0%;background:var(--accent2)"></div></div>
+    </div>
+    <div class="stat p">
+      <div class="stat-lbl">Platforms Active</div>
+      <div class="stat-val p" id="ov-platforms">0</div>
+      <div class="stat-sub">select in Platforms tab</div>
+      <div class="stat-prog"><div class="stat-prog-fill" id="ov-plat-bar" style="width:0%;background:var(--accent3)"></div></div>
+    </div>
+    <div class="stat g">
+      <div class="stat-lbl">Est. Weekly Reach</div>
+      <div class="stat-val g" id="ov-reach">—</div>
+      <div class="stat-sub">based on avg engagement</div>
+      <div class="stat-prog"><div class="stat-prog-fill" id="ov-reach-bar" style="width:0%;background:var(--gold)"></div></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">⚡ Quick Actions</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn btn-r" onclick="showTab('platforms',document.querySelectorAll('.nav-tab')[1])">⚙️ Setup Platforms</button>
+        <button class="btn btn-p" onclick="generateAllCalendars()">📅 All Calendars</button>
+        <button class="btn btn-o" onclick="showTab('content',document.querySelectorAll('.nav-tab')[2])">🔍 Collect Content</button>
+        <button class="btn btn-g" onclick="showTab('viral',document.querySelectorAll('.nav-tab')[3])">🔥 Score Content</button>
+      </div>
+      <div class="activity-bar" id="qa-bar">
+        <div class="ab-label"><span id="qa-label">Generating all calendars...</span><span id="qa-pct">0%</span></div>
+        <div class="ab-track"><div class="ab-fill accent" id="qa-fill" style="width:0%"></div></div>
+        <div class="ab-steps" id="qa-steps"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Platform Breakdown</div>
+      <div id="platformBreakdown" style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">
+        No platforms selected — go to Platforms tab
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ PLATFORMS -->
+<div class="panel" id="panel-platforms">
+  <div class="sec-head"><div class="sec-title">Platform & Niche Setup</div><div class="sec-sub">Choose where to post and which audiences to target</div></div>
+
+  <div class="card">
+    <div class="card-title">📱 Select Platforms to Post To</div>
+    <div class="plat-grid" id="platGrid">
+      <div class="plat-card" data-p="tiktok" onclick="togglePlat(this)"><span class="plat-icon">🎵</span><div class="plat-name">TIKTOK</div><div class="plat-stat">1.5B users</div></div>
+      <div class="plat-card" data-p="instagram" onclick="togglePlat(this)"><span class="plat-icon">📸</span><div class="plat-name">INSTAGRAM</div><div class="plat-stat">2B users</div></div>
+      <div class="plat-card" data-p="youtube" onclick="togglePlat(this)"><span class="plat-icon">▶️</span><div class="plat-name">YOUTUBE</div><div class="plat-stat">2.7B users</div></div>
+      <div class="plat-card" data-p="twitter" onclick="togglePlat(this)"><span class="plat-icon">𝕏</span><div class="plat-name">X / TWITTER</div><div class="plat-stat">600M users</div></div>
+      <div class="plat-card" data-p="fanvue" onclick="togglePlat(this)"><span class="plat-icon">💜</span><div class="plat-name">FANVUE</div><div class="plat-stat">Adult · 80% payout</div></div>
+      <div class="plat-card" data-p="facebook" onclick="togglePlat(this)"><span class="plat-icon">👍</span><div class="plat-name">FACEBOOK</div><div class="plat-stat">3B users</div></div>
+      <div class="plat-card" data-p="pinterest" onclick="togglePlat(this)"><span class="plat-icon">📌</span><div class="plat-name">PINTEREST</div><div class="plat-stat">465M users</div></div>
+      <div class="plat-card" data-p="snapchat" onclick="togglePlat(this)"><span class="plat-icon">👻</span><div class="plat-name">SNAPCHAT</div><div class="plat-stat">750M users</div></div>
+      <div class="plat-card" data-p="glowx" onclick="togglePlat(this)"><span class="plat-icon">✨</span><div class="plat-name">GLOWX</div><div class="plat-stat">Your platform · 80%</div></div>
+      <div class="plat-card" data-p="threads" onclick="togglePlat(this)"><span class="plat-icon">🧵</span><div class="plat-name">THREADS</div><div class="plat-stat">200M users</div></div>
+    </div>
+
+    <!-- PLATFORM SELECTION PROGRESS -->
+    <div class="activity-bar visible" id="plat-progress-bar">
+      <div class="ab-label"><span>Platform coverage</span><span id="plat-pct">0 / 10 selected</span></div>
+      <div class="ab-track"><div class="ab-fill accent" id="plat-fill" style="width:0%"></div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-o btn-sm" onclick="selectAllPlats()">Select All</button>
+      <button class="btn btn-o btn-sm" onclick="clearPlats()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎯 Select Target Niches</div>
+    <div class="niche-wrap" id="nicheWrap"></div>
+    <!-- NICHE SELECTION PROGRESS -->
+    <div class="activity-bar visible">
+      <div class="ab-label"><span>Niche coverage</span><span id="niche-pct">0 / 16 selected</span></div>
+      <div class="ab-track"><div class="ab-fill cyan" id="niche-fill" style="width:0%"></div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-o btn-sm" onclick="selectAllNiches()">Select All</button>
+      <button class="btn btn-o btn-sm" onclick="clearNiches()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🕐 Posting Schedule Settings</div>
+    <div class="fr three">
+      <div><label>Posts Per Day Per Creator</label>
+        <select id="postsPerDay"><option>1x daily</option><option>2x daily</option><option selected>3x daily (recommended)</option><option>5x daily</option></select>
+      </div>
+      <div><label>Time Zone</label>
+        <select id="timezone"><option>EST (New York)</option><option>PST (LA)</option><option>GMT (London)</option><option selected>BM (Bermuda)</option></select>
+      </div>
+      <div><label>Content Language</label>
+        <select id="lang"><option selected>English</option><option>Spanish</option><option>French</option><option>Portuguese</option></select>
+      </div>
+    </div>
+
+    <!-- SAVE PROGRESS -->
+    <div class="activity-bar" id="save-bar">
+      <div class="ab-label"><span id="save-label">Saving settings...</span><span id="save-pct">0%</span></div>
+      <div class="ab-track"><div class="ab-fill accent" id="save-fill" style="width:0%"></div></div>
+      <div class="ab-steps">
+        <div class="ab-step" id="step-plats">Platforms</div>
+        <div class="ab-step" id="step-niches">Niches</div>
+        <div class="ab-step" id="step-sched">Schedule</div>
+        <div class="ab-step" id="step-save">Saving</div>
+      </div>
+    </div>
+    <button class="btn btn-r" onclick="saveSettings()">💾 Save Platform Settings</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ CONTENT -->
+<div class="panel" id="panel-content">
+  <div class="sec-head"><div class="sec-title">Auto Content Collector</div><div class="sec-sub">AI finds the best trending content for your niches</div></div>
+
+  <div class="card">
+    <div class="card-title">🔍 Search & Collect Trending Content</div>
+    <div class="fr">
+      <div><label>Niche / Topic</label><input id="col-niche" placeholder="fitness, beauty, finance, gaming..." /></div>
+      <div><label>Platform to Scrape</label>
+        <select id="col-plat"><option value="tiktok">TikTok</option><option value="instagram">Instagram</option><option value="youtube">YouTube</option><option value="twitter">X / Twitter</option><option value="all">All Platforms</option></select>
+      </div>
+    </div>
+    <div class="fr three">
+      <div><label>Min Viral Score</label>
+        <select id="col-score"><option value="50">50+ (Good)</option><option value="70" selected>70+ (Great)</option><option value="85">85+ (Viral)</option></select>
+      </div>
+      <div><label>Content Type</label>
+        <select id="col-type"><option value="all">All Types</option><option value="video">Video</option><option value="image">Image</option><option value="carousel">Carousel</option></select>
+      </div>
+      <div><label>Time Period</label>
+        <select id="col-period"><option value="24h">Last 24 hours</option><option value="7d" selected>Last 7 days</option><option value="30d">Last 30 days</option></select>
+      </div>
+    </div>
+
+    <!-- COLLECTION PROGRESS -->
+    <div class="activity-bar" id="col-bar">
+      <div class="ab-label"><span id="col-label">Scanning platforms...</span><span id="col-pct">0%</span></div>
+      <div class="ab-track"><div class="ab-fill accent" id="col-fill" style="width:0%"></div></div>
+      <div class="ab-steps" id="col-steps"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-r" onclick="collectContent()">🔍 Find Viral Content</button>
+      <button class="btn btn-p" onclick="autoCollectAll()">🤖 Auto-Collect All Niches</button>
+    </div>
+  </div>
+
+  <div id="content-placeholder" style="text-align:center;padding:40px;color:var(--muted);font-size:14px">Select a niche and click Find Viral Content</div>
+  <div class="feed" id="content-feed" style="display:none"></div>
+</div>
+
+<!-- ════════════════════════════════════ VIRAL -->
+<div class="panel" id="panel-viral">
+  <div class="sec-head"><div class="sec-title">Viral Score Analyzer</div><div class="sec-sub">Predict performance before you post</div></div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">📝 Content Details</div>
+      <div class="fr full"><div><label>Hook (First 3 Seconds)</label><input id="vs-hook" placeholder="POV: Nobody told you this secret about..." /></div></div>
+      <div class="fr full"><div><label>Caption</label><textarea id="vs-caption" placeholder="Drop a 🔥 if this helped!"></textarea></div></div>
+      <div class="fr three">
+        <div><label>Niche</label>
+          <select id="vs-niche"><option value="fitness">Fitness</option><option value="beauty">Beauty</option><option value="finance">Finance</option><option value="music">Music</option><option value="gaming">Gaming</option><option value="adult">Adult/Creator</option><option value="fashion">Fashion</option><option value="travel">Travel</option></select>
+        </div>
+        <div><label>Duration (sec)</label><input type="number" id="vs-dur" value="15" /></div>
+        <div><label>Platform</label>
+          <select id="vs-plat"><option value="tiktok">TikTok</option><option value="instagram">Instagram</option><option value="youtube">YouTube Shorts</option></select>
+        </div>
+      </div>
+      <div class="fr full"><div><label>Hashtags (comma separated)</label><input id="vs-tags" placeholder="#fyp, #viral, #fitness" /></div></div>
+
+      <!-- ANALYSIS PROGRESS -->
+      <div class="activity-bar" id="vs-bar">
+        <div class="ab-label"><span id="vs-label">Analyzing content...</span><span id="vs-pct">0%</span></div>
+        <div class="ab-track"><div class="ab-fill accent" id="vs-fill" style="width:0%"></div></div>
+        <div class="ab-steps">
+          <div class="ab-step" id="vss-1">Hook Analysis</div>
+          <div class="ab-step" id="vss-2">Caption Score</div>
+          <div class="ab-step" id="vss-3">Hashtag Fit</div>
+          <div class="ab-step" id="vss-4">Trend Match</div>
+          <div class="ab-step" id="vss-5">Prediction</div>
+        </div>
+      </div>
+      <button class="btn btn-r" style="width:100%;margin-top:8px" onclick="scoreViral()">🔥 Analyze Viral Potential</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Analysis Results</div>
+      <div id="vs-placeholder" style="text-align:center;padding:40px;color:var(--muted);font-size:13px">Fill in content details and click Analyze</div>
+      <div id="vs-result" style="display:none">
+        <div class="score-circle" id="vs-circle">
+          <div class="score-num" id="vs-num">—</div>
+          <div class="score-lbl">VIRAL SCORE</div>
+        </div>
+        <div id="vs-anomaly" style="text-align:center;font-size:12px;letter-spacing:2px;margin-bottom:12px"></div>
+        <div class="score-bars" id="vs-bars"></div>
+        <div class="pred-row" id="vs-preds"></div>
+        <div id="vs-tips" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ CALENDAR -->
+<div class="panel" id="panel-calendar">
+  <div class="sec-head"><div class="sec-title">Content Calendar</div><div class="sec-sub">Auto-scheduled posts for every creator</div></div>
+
+  <div class="card">
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div><label>Creator ID</label><input id="cal-id" placeholder="e.g. rubi_01" style="width:180px" /></div>
+      <div><label>Weeks</label>
+        <select id="cal-weeks" style="width:110px"><option value="2">2 Weeks</option><option value="4" selected>4 Weeks</option><option value="8">8 Weeks</option></select>
+      </div>
+      <button class="btn btn-r" onclick="genCalendar()">📅 Generate Calendar</button>
+      <button class="btn btn-p" onclick="generateAllCalendars()">🤖 All 75 Creators</button>
+    </div>
+
+    <!-- CALENDAR GENERATION PROGRESS -->
+    <div class="activity-bar" id="cal-bar">
+      <div class="ab-label"><span id="cal-label">Generating calendar...</span><span id="cal-pct">0%</span></div>
+      <div class="ab-track"><div class="ab-fill accent" id="cal-fill" style="width:0%"></div></div>
+      <div class="ab-steps" id="cal-steps"></div>
+    </div>
+  </div>
+
+  <div class="card" id="cal-out">
+    <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px">Generate a calendar to see the schedule</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ TOOLS -->
+<div class="panel" id="panel-tools">
+  <div class="sec-head"><div class="sec-title">Digital Marketing Tools</div><div class="sec-sub">Full suite for growth, engagement & revenue</div></div>
+
+  <div class="tools-grid">
+    <div class="tool-card" onclick="openTool('hashtag',this)"><div class="tool-icon">🏷️</div><div class="tool-name">HASHTAG GENERATOR</div><div class="tool-desc">AI-powered sets optimised per platform and niche</div></div>
+    <div class="tool-card" onclick="openTool('caption',this)"><div class="tool-icon">✍️</div><div class="tool-name">CAPTION WRITER</div><div class="tool-desc">Hook + body + CTA captions that convert follows to subs</div></div>
+    <div class="tool-card" onclick="openTool('hook',this)"><div class="tool-icon">🎣</div><div class="tool-name">HOOK GENERATOR</div><div class="tool-desc">100+ proven hook formulas, customised to your niche</div></div>
+    <div class="tool-card" onclick="openTool('clip',this)"><div class="tool-icon">✂️</div><div class="tool-name">VIDEO CLIPPER</div><div class="tool-desc">Long video → 5 viral shorts automatically</div></div>
+    <div class="tool-card" onclick="openTool('bio',this)"><div class="tool-icon">👤</div><div class="tool-name">BIO OPTIMIZER</div><div class="tool-desc">Convert-optimised bios for every platform</div></div>
+    <div class="tool-card" onclick="openTool('dm',this)"><div class="tool-icon">💬</div><div class="tool-name">DM SCRIPTS</div><div class="tool-desc">Welcome, upsell, re-engagement and PPV tease scripts</div></div>
+    <div class="tool-card" onclick="openTool('trend',this)"><div class="tool-icon">📈</div><div class="tool-name">TREND SPOTTER</div><div class="tool-desc">Real-time trending topics and sounds per niche</div></div>
+    <div class="tool-card" onclick="openTool('email',this)"><div class="tool-icon">📧</div><div class="tool-name">EMAIL SEQUENCES</div><div class="tool-desc">Lead nurture sequences to convert fans to paying subs</div></div>
+  </div>
+
+  <div class="card" id="tool-ws" style="display:none">
+    <div class="card-title" id="tool-title"></div>
+    <div id="tool-body"></div>
+    <!-- TOOL PROGRESS BAR -->
+    <div class="activity-bar" id="tool-bar">
+      <div class="ab-label"><span id="tool-label">Generating...</span><span id="tool-pct">0%</span></div>
+      <div class="ab-track"><div class="ab-fill cyan" id="tool-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ SCHEDULE -->
+<div class="panel" id="panel-schedule">
+  <div class="sec-head"><div class="sec-title">Post Scheduler</div><div class="sec-sub">View and manage all scheduled posts</div></div>
+
+  <div class="card">
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div><label>Creator ID</label><input id="sch-id" placeholder="rubi_01" style="width:160px" /></div>
+      <div><label>Days</label>
+        <select id="sch-days" style="width:100px"><option value="7">7 Days</option><option value="14">14 Days</option><option value="30">30 Days</option></select>
+      </div>
+      <div><label>Platform</label>
+        <select id="sch-plat" style="width:130px"><option value="">All Platforms</option><option value="tiktok">TikTok</option><option value="instagram">Instagram</option><option value="youtube">YouTube</option><option value="fanvue">Fanvue</option></select>
+      </div>
+      <button class="btn btn-r" onclick="loadSchedule()">Load Schedule</button>
+    </div>
+
+    <!-- LOAD PROGRESS -->
+    <div class="activity-bar" id="sch-bar">
+      <div class="ab-label"><span id="sch-label">Loading schedule...</span><span id="sch-pct">0%</span></div>
+      <div class="ab-track"><div class="ab-fill cyan" id="sch-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="sch-out"><div style="text-align:center;padding:40px;color:var(--muted);font-size:14px">Enter a Creator ID to load their schedule</div></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const API   = 'https://ai-influencer-studio-production.up.railway.app';
+const ADMIN = 'AgentZero2025!';
+const NICHES_LIST = [
+  {id:'fitness',l:'💪 Fitness'},{id:'beauty',l:'💄 Beauty'},{id:'fashion',l:'👗 Fashion'},
+  {id:'finance',l:'💰 Finance'},{id:'gaming',l:'🎮 Gaming'},{id:'music',l:'🎵 Music'},
+  {id:'food',l:'🍕 Food'},{id:'travel',l:'✈️ Travel'},{id:'yoga',l:'🧘 Yoga'},
+  {id:'goth',l:'🖤 Goth'},{id:'cosplay',l:'🎭 Cosplay'},{id:'asmr',l:'🎧 ASMR'},
+  {id:'adult',l:'🔞 Adult/Creator'},{id:'motivate',l:'🚀 Motivation'},{id:'tech',l:'💻 Tech'},{id:'pets',l:'🐾 Pets'}
+];
+let selPlats = new Set(), selNiches = new Set();
+
+// ── PROGRESS HELPERS ──────────────────────────────────────────────────────────
+function showGlobalProgress() {
+  const el = document.getElementById('globalProgress');
+  const fill = document.getElementById('globalProgressFill');
+  el.style.display = 'block'; fill.style.width = '0%';
+  let p = 0;
+  const iv = setInterval(function(){ p += Math.random()*8; if(p>90) clearInterval(iv); fill.style.width = Math.min(p,90)+'%'; }, 200);
+  return { stop: function(){ clearInterval(iv); fill.style.width='100%'; setTimeout(function(){el.style.display='none';fill.style.width='0%';},600); } };
+}
+
+function toast(icon, title, steps) {
+  var t=document.getElementById('activityToast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastTitle').textContent=title;
+  document.getElementById('toastMsg').textContent='Starting...';
+  document.getElementById('toastBarFill').style.width='0%';
+  t.style.display='block';
+  var i=0;
+  var iv = setInterval(function(){
+    if(i>=steps.length){ clearInterval(iv); document.getElementById('toastBarFill').style.width='100%'; document.getElementById('toastMsg').textContent='✅ Complete'; setTimeout(function(){t.style.display='none';},1500); return; }
+    var pct = Math.round((i+1)/steps.length*100);
+    document.getElementById('toastBarFill').style.width=pct+'%';
+    document.getElementById('toastMsg').textContent=steps[i];
+    i++;
+  }, 600);
+}
+
+function animBar(fillId, pctId, labelId, pct, label) {
+  document.getElementById(fillId).style.width = pct+'%';
+  if(pctId) document.getElementById(pctId).textContent = Math.round(pct)+'%';
+  if(labelId && label) document.getElementById(labelId).textContent = label;
+}
+
+function runSteps(barId, fillId, pctId, labelId, stepIds, steps, delay) {
+  delay = delay || 700;
+  document.getElementById(barId).classList.add('visible');
+  var i=0;
+  function next() {
+    if(i>0 && stepIds[i-1]) document.getElementById(stepIds[i-1]).className='ab-step done';
+    if(i>=steps.length) return;
+    if(stepIds[i]) document.getElementById(stepIds[i]).className='ab-step active';
+    var pct = Math.round((i+1)/steps.length*100);
+    animBar(fillId, pctId, labelId, pct, steps[i]);
+    i++; setTimeout(next, delay);
+  }
+  next();
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('panel-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ── NICHES & PLATFORMS ────────────────────────────────────────────────────────
+function initNiches() {
+  var html = '';
+  NICHES_LIST.forEach(function(n){
+    html += '<div class="niche-tag" data-n="'+n.id+'" onclick="toggleNiche(this)">'+n.l+'</div>';
+  });
+  document.getElementById('nicheWrap').innerHTML = html;
+}
+
+function toggleNiche(el) {
+  var n=el.dataset.n;
+  if(selNiches.has(n)){selNiches.delete(n);el.classList.remove('on');}
+  else{selNiches.add(n);el.classList.add('on');}
+  var pct=selNiches.size/NICHES_LIST.length*100;
+  animBar('niche-fill',null,null,pct);
+  document.getElementById('niche-pct').textContent=selNiches.size+' / '+NICHES_LIST.length+' selected';
+}
+function selectAllNiches() { document.querySelectorAll('.niche-tag').forEach(function(el){el.classList.add('on');selNiches.add(el.dataset.n);}); animBar('niche-fill',null,null,100); document.getElementById('niche-pct').textContent=NICHES_LIST.length+' / '+NICHES_LIST.length+' selected'; }
+function clearNiches() { document.querySelectorAll('.niche-tag').forEach(function(el){el.classList.remove('on');}); selNiches.clear(); animBar('niche-fill',null,null,0); document.getElementById('niche-pct').textContent='0 / '+NICHES_LIST.length+' selected'; }
+
+function togglePlat(el) {
+  var p=el.dataset.p;
+  if(selPlats.has(p)){selPlats.delete(p);el.classList.remove('on');}
+  else{selPlats.add(p);el.classList.add('on');}
+  updatePlatBar();
+}
+function updatePlatBar() {
+  var pct=selPlats.size/10*100;
+  animBar('plat-fill',null,null,pct);
+  document.getElementById('plat-pct').textContent=selPlats.size+' / 10 selected';
+  document.getElementById('ov-platforms').textContent=selPlats.size;
+  var reach = selPlats.size*75*2400;
+  document.getElementById('ov-reach').textContent=reach>0?Math.round(reach/1000)+'K':'—';
+  updatePlatBreakdown();
+}
+function selectAllPlats() { document.querySelectorAll('.plat-card').forEach(function(el){el.classList.add('on');selPlats.add(el.dataset.p);}); updatePlatBar(); }
+function clearPlats() { document.querySelectorAll('.plat-card').forEach(function(el){el.classList.remove('on');}); selPlats.clear(); updatePlatBar(); }
+
+function updatePlatBreakdown() {
+  var icons={'tiktok':'🎵','instagram':'📸','youtube':'▶️','twitter':'𝕏','fanvue':'💜','facebook':'👍','pinterest':'📌','snapchat':'👻','glowx':'✨','threads':'🧵'};
+  if(!selPlats.size){document.getElementById('platformBreakdown').innerHTML='<span style="color:var(--muted);font-size:13px">No platforms selected yet</span>';return;}
+  var html='';
+  selPlats.forEach(function(p){
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'+(icons[p]||'📱')+' <span style="font-size:13px;flex:1;text-transform:capitalize">'+p+'</span><span style="font-size:12px;color:var(--green)">● Active</span></div>';
+  });
+  document.getElementById('platformBreakdown').innerHTML=html;
+}
+
+function saveSettings() {
+  var bar=document.getElementById('save-bar');
+  bar.classList.add('visible');
+  var steps=['Validating platforms...','Saving niches...','Applying schedule...','Done!'];
+  var ids=['step-plats','step-niches','step-sched','step-save'];
+  runSteps('save-bar','save-fill','save-pct','save-label',ids,steps,500);
+  localStorage.setItem('emp_plats',JSON.stringify([...selPlats]));
+  localStorage.setItem('emp_niches',JSON.stringify([...selNiches]));
+  setTimeout(function(){ toast('💾','Settings Saved',['Saving platforms...','Saving niches...','Applying schedule...','All done!']); }, 100);
+}
+
+// ── CONTENT COLLECTOR ─────────────────────────────────────────────────────────
+var MOCK = [
+  {e:'🏋️',hook:'POV: You just discovered the only 3 exercises you need',plat:'tiktok',niche:'fitness',views:'2.3M',score:91},
+  {e:'💄',hook:'This drugstore dupe is IDENTICAL to the $80 version',plat:'instagram',niche:'beauty',views:'1.8M',score:87},
+  {e:'💰',hook:'Nobody tells you this about passive income (until now)',plat:'tiktok',niche:'finance',views:'4.1M',score:94},
+  {e:'🎮',hook:'This glitch lets you win EVERY time — devs are deleting this',plat:'youtube',niche:'gaming',views:'890K',score:78},
+  {e:'✈️',hook:'A $200 flight hack that works every single time',plat:'tiktok',niche:'travel',views:'3.2M',score:92},
+  {e:'🎵',hook:'POV: You heard this beat for the first time',plat:'tiktok',niche:'music',views:'5.7M',score:96},
+  {e:'🧘',hook:'3-minute morning routine that changed my entire life',plat:'instagram',niche:'yoga',views:'1.2M',score:82},
+  {e:'🍕',hook:'Restaurant owners hate this one trick to eat cheaper',plat:'tiktok',niche:'food',views:'2.9M',score:89},
+  {e:'👗',hook:'Thrift store find that looks like a $500 designer piece',plat:'instagram',niche:'fashion',views:'1.5M',score:85}
+];
+
+function collectContent() {
+  var bar=document.getElementById('col-bar');
+  bar.classList.add('visible');
+  var platSel=document.getElementById('col-plat').value;
+  var minScore=parseInt(document.getElementById('col-score').value);
+  var scanSteps = platSel==='all'
+    ? ['Scanning TikTok...','Scanning Instagram...','Scanning YouTube...','Scanning Twitter...','Ranking results...']
+    : ['Scanning '+platSel+'...','Filtering by score...','Ranking results...','Done'];
+  var stepIds=[];
+  var stepsHtml='';
+  scanSteps.forEach(function(s,i){ stepIds.push('col-s'+i); stepsHtml+='<div class="ab-step" id="col-s'+i+'">'+s.replace('...','')+'</div>'; });
+  document.getElementById('col-steps').innerHTML=stepsHtml;
+  var gp=showGlobalProgress();
+  runSteps('col-bar','col-fill','col-pct','col-label',stepIds,scanSteps,700);
+  document.getElementById('content-placeholder').style.display='none';
+  document.getElementById('content-feed').style.display='none';
+  var totalMs = scanSteps.length*750;
+  setTimeout(function(){
+    gp.stop();
+    var filtered=MOCK.filter(function(c){return c.score>=minScore;}).filter(function(c){return platSel==='all'||c.plat===platSel;});
+    document.getElementById('content-feed').style.display='grid';
+    renderFeed(filtered);
+  }, totalMs);
+}
+
+function autoCollectAll() {
+  var bar=document.getElementById('col-bar');
+  bar.classList.add('visible');
+  var allP=['TikTok','Instagram','YouTube','X/Twitter','Pinterest'];
+  var stepsHtml='';
+  var stepIds=[];
+  allP.forEach(function(p,i){ stepIds.push('col-all-'+i); stepsHtml+='<div class="ab-step" id="col-all-'+i+'">'+p+'</div>'; });
+  document.getElementById('col-steps').innerHTML=stepsHtml;
+  var gp=showGlobalProgress();
+  toast('🤖','Auto-Collecting Content',allP.map(function(p){return 'Scanning '+p+'...';}));
+  runSteps('col-bar','col-fill','col-pct','col-label',stepIds,allP.map(function(p){return 'Scanning '+p+'...';}),700);
+  document.getElementById('content-placeholder').style.display='none';
+  document.getElementById('content-feed').style.display='none';
+  setTimeout(function(){
+    gp.stop();
+    document.getElementById('content-feed').style.display='grid';
+    var sorted=[].concat(MOCK).sort(function(a,b){return b.score-a.score;});
+    renderFeed(sorted);
+  }, allP.length*750);
+}
+
+function renderFeed(items) {
+  var html='';
+  items.forEach(function(c){
+    html += '<div class="feed-item">'
+      + '<div class="feed-thumb"><span style="font-size:44px">'+c.e+'</span>'
+      + '<div class="feed-badges"><span style="padding:2px 7px;border-radius:4px;font-size:9px;background:rgba(0,0,0,0.7);color:#fff">'+c.plat+'</span>'
+      + '<span style="padding:2px 7px;border-radius:4px;font-size:9px;background:rgba(155,89,245,0.5);color:#fff">'+c.niche+'</span></div>'
+      + '<div class="feed-score">'+c.score+'</div></div>'
+      + '<div class="feed-body"><div class="feed-hook">'+c.hook+'</div>'
+      + '<div class="feed-meta"><span>👁 '+c.views+'</span><span>🔥 '+c.score+'</span></div>'
+      + '<div style="display:flex;gap:6px">'
+      + '<button class="btn btn-r btn-sm" onclick="useHook(this)">Use This</button>'
+      + '<button class="btn btn-o btn-sm">Save</button></div></div></div>';
+  });
+  document.getElementById('content-feed').innerHTML=html;
+  // Store hooks for retrieval
+  window._mockHooks = items.map(function(c){return c.hook;});
+  document.querySelectorAll('.feed-item').forEach(function(el,i){
+    el.querySelector('.btn-r').addEventListener('click',function(){useHook(window._mockHooks[i]||'');});
+  });
+}
+
+function useHook(hookOrBtn) {
+  var hook = typeof hookOrBtn==='string' ? hookOrBtn : '';
+  document.getElementById('vs-hook').value=hook;
+  showTab('viral',document.querySelectorAll('.nav-tab')[3]);
+}
+
+// ── VIRAL SCORE ───────────────────────────────────────────────────────────────
+function scoreViral() {
+  var hook=document.getElementById('vs-hook').value.trim();
+  var caption=document.getElementById('vs-caption').value.trim();
+  var niche=document.getElementById('vs-niche').value;
+  var dur=parseInt(document.getElementById('vs-dur').value)||15;
+  var hashtags=document.getElementById('vs-tags').value.split(',').map(function(h){return h.trim();}).filter(Boolean);
+
+  document.getElementById('vs-bar').classList.add('visible');
+  var steps=['Hook Analysis...','Caption Score...','Hashtag Fit...','Trend Match...','Prediction...'];
+  var ids=['vss-1','vss-2','vss-3','vss-4','vss-5'];
+  runSteps('vs-bar','vs-fill','vs-pct','vs-label',ids,steps,700);
+  document.getElementById('vs-placeholder').style.display='none';
+  document.getElementById('vs-result').style.display='none';
+  var gp=showGlobalProgress();
+  toast('🔥','Analyzing Content',['Checking Hook...','Scoring Caption...','Matching Hashtags...','Checking Trends...','Predicting...']);
+
+  setTimeout(function(){
+    gp.stop();
+    fetch(API+'/api/marketing/viral-score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hook:hook,caption:caption,niche:niche,duration_seconds:dur,hashtags:hashtags})})
+    .then(function(r){return r.json();})
+    .then(function(data){renderViralResult(data);})
+    .catch(function(){
+      var s=Math.floor(55+Math.random()*40);
+      renderViralResult({
+        viral_score:s,
+        anomaly_type:s>80?'VIRAL_SPIKE':'STANDARD',
+        scores:{hook_strength:0.6+Math.random()*0.35,caption_quality:0.5+Math.random()*0.4,hashtag_relevance:0.55+Math.random()*0.35,duration_fit:0.8,trend_alignment:0.6+Math.random()*0.3},
+        predicted_engagement:{views:s*600,likes:s*42,comments:s*8,shares:s*15,followers_gained:s*4},
+        recommendation:hook.length<20?['Strengthen your hook with a power word or number 🎯']:['Strong hook — post between 6-10pm for max reach 🔥']
+      });
+    });
+  }, 3800);
+}
+
+function renderViralResult(data) {
+  document.getElementById('vs-result').style.display='block';
+  var score=data.viral_score||0;
+  var col=score>=80?'var(--green)':score>=60?'var(--gold)':'var(--accent)';
+  var circle=document.getElementById('vs-circle');
+  circle.style.background='conic-gradient('+col+' '+(score*3.6)+'deg,var(--border) 0deg)';
+  circle.style.boxShadow='0 0 20px '+col+'40';
+  document.getElementById('vs-num').style.color=col;
+  document.getElementById('vs-num').textContent=score;
+  var amap={VIRAL_SPIKE:'🚀 VIRAL SPIKE',ENGAGEMENT_BUBBLE:'💬 ENGAGEMENT BUBBLE',HIGH_RETENTION:'👁 HIGH RETENTION',STANDARD:'📊 STANDARD'};
+  document.getElementById('vs-anomaly').textContent=amap[data.anomaly_type]||'📊 STANDARD';
+  document.getElementById('vs-anomaly').style.color=col;
+  var bnames={hook_strength:'Hook Strength',caption_quality:'Caption Quality',hashtag_relevance:'Hashtag Fit',duration_fit:'Duration Fit',trend_alignment:'Trend Alignment'};
+  var barsHtml='';
+  var scores=data.scores||{};
+  Object.keys(scores).forEach(function(k){
+    var p=Math.round(scores[k]*100);
+    var c=p>=70?'var(--green)':p>=50?'var(--gold)':'var(--accent)';
+    barsHtml+='<div class="sbar"><div class="sbar-name">'+(bnames[k]||k)+'</div><div class="sbar-track"><div class="sbar-fill" style="width:'+p+'%;background:'+c+'"></div></div><div class="sbar-pct">'+p+'%</div></div>';
+  });
+  document.getElementById('vs-bars').innerHTML=barsHtml;
+  var pe=data.predicted_engagement||{};
+  var predsData=[['Views',(pe.views||0).toLocaleString()],['Likes',(pe.likes||0).toLocaleString()],['Comments',(pe.comments||0).toLocaleString()],['Shares',(pe.shares||0).toLocaleString()],['Followers','+'+(pe.followers_gained||0).toLocaleString()]];
+  var predsHtml='';
+  predsData.forEach(function(pd){predsHtml+='<div class="pred-box"><div class="pred-val">'+pd[1]+'</div><div class="pred-lbl">'+pd[0]+'</div></div>';});
+  document.getElementById('vs-preds').innerHTML=predsHtml;
+  var tipsHtml='';
+  (data.recommendation||[]).forEach(function(tip){tipsHtml+='<div style="padding:8px 12px;background:rgba(255,60,110,0.08);border:1px solid rgba(255,60,110,0.2);border-radius:8px;font-size:13px;margin-bottom:7px">💡 '+tip+'</div>';});
+  document.getElementById('vs-tips').innerHTML=tipsHtml;
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
+function genCalendar() {
+  var id=document.getElementById('cal-id').value.trim();
+  var weeks=document.getElementById('cal-weeks').value;
+  if(!id){alert('Enter a Creator ID');return;}
+  var bar=document.getElementById('cal-bar');
+  bar.classList.add('visible');
+  var steps=['Loading '+id+' profile...','Analysing niche trends...','Building week 1...','Building week 2...','Building week 3...','Building week 4...','Scheduling posts...','Done!'];
+  var stepsHtml='';
+  var stepIds=[];
+  steps.forEach(function(s,i){stepIds.push('cal-s'+i);stepsHtml+='<div class="ab-step" id="cal-s'+i+'">'+s.replace('...','')+'</div>';});
+  document.getElementById('cal-steps').innerHTML=stepsHtml;
+  var gp=showGlobalProgress();
+  runSteps('cal-bar','cal-fill','cal-pct','cal-label',stepIds,steps,550);
+  document.getElementById('cal-out').innerHTML='<div class="loader"><div class="spin"></div>Generating calendar for '+id+'...</div>';
+  setTimeout(function(){
+    gp.stop();
+    fetch(API+'/api/marketing/calendar/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({weeks:parseInt(weeks)})})
+    .then(function(r){return r.json();})
+    .then(function(data){renderCalendar(data.calendar||[],id);})
+    .catch(function(e){document.getElementById('cal-out').innerHTML='<div style="color:var(--accent);padding:20px">Error: '+e.message+'</div>';});
+  }, steps.length*560);
+}
+
+function generateAllCalendars() {
+  document.getElementById('qa-bar').classList.add('visible');
+  document.getElementById('cal-bar').classList.add('visible');
+  var gp=showGlobalProgress();
+  toast('📅','Generating All Calendars',['Loading 75 creators...','Analysing niches...','Building schedules...','Distributing posts...','Optimising timing...','Finalising...']);
+  var done=0;
+  var iv=setInterval(function(){
+    done=Math.min(done+1,75);
+    var pct=done/75*100;
+    animBar('cal-fill','cal-pct','cal-label',pct,'Processing creator '+done+' / 75...');
+    animBar('qa-fill','qa-pct','qa-label',pct,'Generating calendars: '+done+' / 75');
+    if(done>=75){
+      clearInterval(iv); gp.stop();
+      document.getElementById('cal-out').innerHTML='<div style="text-align:center;padding:48px"><div style="font-size:48px;margin-bottom:14px">🎉</div><div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:2px;color:var(--green)">ALL CALENDARS GENERATED</div><div style="color:var(--muted);margin-top:8px;font-size:14px">75 creators · 4 weeks each · 1,575 posts scheduled</div></div>';
+    }
+  },80);
+  fetch(API+'/api/marketing/calendar-all',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ADMIN},body:JSON.stringify({weeks:4})}).catch(function(){});
+}
+
+function renderCalendar(calendar, creatorId) {
+  if(!calendar.length){document.getElementById('cal-out').innerHTML='<div style="color:var(--muted);padding:20px">No data — generate a calendar via the API first</div>';return;}
+  var days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var html='<div style="font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:2px;color:var(--accent2);margin-bottom:16px">CALENDAR FOR '+creatorId.toUpperCase()+'</div>';
+  calendar.forEach(function(week){
+    html+='<div style="margin-bottom:20px"><div style="font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">WEEK '+week.week+'</div><div style="overflow-x:auto"><div class="cal-grid">';
+    days.forEach(function(d){html+='<div class="cal-head">'+d+'</div>';});
+    (week.posts||[]).forEach(function(p){
+      var bHtml='';
+      (p.platforms||[]).forEach(function(pl){bHtml+='<span class="cal-badge">'+pl+'</span>';});
+      html+='<div class="cal-cell"><div class="cal-date">'+(p.date||'')+' '+(p.time||'')+'</div><div class="cal-theme">'+(p.theme||'')+'</div><div>'+bHtml+'</div></div>';
+    });
+    html+='</div></div></div>';
+  });
+  document.getElementById('cal-out').innerHTML=html;
+}
+
+// ── TOOLS ─────────────────────────────────────────────────────────────────────
+var TOOL_TITLES={'hashtag':'🏷️ HASHTAG GENERATOR','caption':'✍️ CAPTION WRITER','hook':'🎣 HOOK GENERATOR','clip':'✂️ VIDEO CLIPPER','bio':'👤 BIO OPTIMIZER','dm':'💬 DM SCRIPTS','trend':'📈 TREND SPOTTER','email':'📧 EMAIL SEQUENCES'};
+
+function getToolHTML(id) {
+  var h = '';
+  if(id==='hashtag') h='<div class="fr"><div><label>Niche</label><select id="ht-n"><option value="fitness">Fitness</option><option value="beauty">Beauty</option><option value="finance">Finance</option><option value="gaming">Gaming</option><option value="music">Music</option><option value="adult">Adult/Creator</option></select></div><div><label>Platform</label><select id="ht-p"><option value="tiktok">TikTok</option><option value="instagram">Instagram</option><option value="youtube">YouTube</option></select></div></div><button class="btn btn-r" onclick="genHashtags()">Generate Hashtags</button><div id="ht-out"></div>';
+  if(id==='caption') h='<div class="fr"><div><label>Content Topic</label><input id="cap-t" placeholder="My morning workout..." /></div><div><label>Tone</label><select id="cap-tone"><option value="energetic">Energetic</option><option value="educational">Educational</option><option value="funny">Funny</option><option value="inspirational">Inspirational</option></select></div></div><div class="fr full"><div><label>CTA Goal</label><select id="cap-cta"><option value="follow">Get Follows</option><option value="comment">Get Comments</option><option value="save">Get Saves</option><option value="subscribe">Get Subs</option></select></div></div><button class="btn btn-r" onclick="genCaption()">Write Caption</button><div id="cap-out"></div>';
+  if(id==='hook') h='<div class="fr"><div><label>Your Niche</label><input id="hk-n" placeholder="fitness, beauty, crypto..." /></div><div><label>Hook Type</label><select id="hk-t"><option value="pov">POV</option><option value="secret">Secret/Reveal</option><option value="mistake">Common Mistake</option><option value="question">Question</option><option value="number">Number List</option></select></div></div><button class="btn btn-r" onclick="genHooks()">Generate 10 Hooks</button><div id="hk-out"></div>';
+  if(id==='clip') h='<div class="fr full"><div><label>Video URL</label><input id="clip-url" type="url" placeholder="https://youtu.be/..." /></div></div><div class="fr"><div><label>Target Duration (sec)</label><input id="clip-dur" type="number" value="15" /></div><div><label>Creator Niche</label><select id="clip-n"><option value="fitness">Fitness</option><option value="beauty">Beauty</option><option value="finance">Finance</option></select></div></div><button class="btn btn-r" onclick="genClips()">Generate Viral Clips</button><div id="clip-out"></div>';
+  if(id==='bio') h='<div class="fr"><div><label>Creator Name</label><input id="bio-n" placeholder="Aria Rivers" /></div><div><label>Niche</label><input id="bio-niche" placeholder="fitness, beauty..." /></div></div><button class="btn btn-r" onclick="genBios()">Generate Bios</button><div id="bio-out"></div>';
+  if(id==='dm') h='<div class="fr"><div><label>Creator Name</label><input id="dm-n" placeholder="Aria Rivers" /></div><div><label>Script Type</label><select id="dm-t"><option value="welcome">Welcome Message</option><option value="upsell">Upsell to PPV</option><option value="reactivate">Re-activate Fan</option><option value="ppv">PPV Tease</option></select></div></div><button class="btn btn-r" onclick="genDM()">Generate Script</button><div id="dm-out"></div>';
+  if(id==='trend') h='<div class="fr"><div><label>Niche</label><select id="tr-n"><option value="fitness">Fitness</option><option value="beauty">Beauty</option><option value="finance">Finance</option><option value="gaming">Gaming</option></select></div><div><label>Platform</label><select id="tr-p"><option value="tiktok">TikTok</option><option value="instagram">Instagram</option><option value="youtube">YouTube</option></select></div></div><button class="btn btn-r" onclick="genTrends()">Get Trending Now</button><div id="tr-out"></div>';
+  if(id==='email') h='<div class="fr"><div><label>Creator / Brand Name</label><input id="em-n" placeholder="Aria Rivers" /></div><div><label>Sequence Goal</label><select id="em-g"><option value="nurture">Lead Nurture (5 emails)</option><option value="launch">Product Launch</option><option value="reactivate">Win-Back Sequence</option></select></div></div><button class="btn btn-r" onclick="genEmails()">Generate Sequence</button><div id="em-out"></div>';
+  return h;
+}
+
+function openTool(id, el) {
+  document.querySelectorAll('.tool-card').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  document.getElementById('tool-ws').style.display='block';
+  document.getElementById('tool-title').textContent=TOOL_TITLES[id];
+  document.getElementById('tool-body').innerHTML=getToolHTML(id);
+  document.getElementById('tool-bar').classList.remove('visible');
+  document.getElementById('tool-ws').scrollIntoView({behavior:'smooth'});
+}
+
+function runToolProgress(label) {
+  return new Promise(function(resolve){
+    var bar=document.getElementById('tool-bar');
+    bar.classList.add('visible');
+    var pcts=[20,45,70,90,100];
+    var i=0;
+    var iv=setInterval(function(){
+      if(i>=pcts.length){clearInterval(iv);resolve();return;}
+      animBar('tool-fill','tool-pct','tool-label',pcts[i],label+'...');
+      i++;
+    },350);
+  });
+}
+
+function genHashtags() {
+  runToolProgress('Generating hashtags').then(function(){
+    var niche=document.getElementById('ht-n').value;
+    var plat=document.getElementById('ht-p').value;
+    var allTags={tiktok:{fitness:['#fyp','#fitness','#workout','#gym','#fitnessmotivation','#gymlife','#fittok','#health','#gains','#bodytransformation'],beauty:['#fyp','#beauty','#makeup','#skincare','#glowup','#makeuptutorial','#beautytips','#skincareRoutine','#grwm','#selfcare'],finance:['#fyp','#finance','#money','#investing','#passiveincome','#financetok','#moneytips','#wealth','#stocks','#sidehustle'],adult:['#fyp','#creator','#exclusive','#subscribe','#fanpage','#content','#viral','#follow','#newcontent','#foryou'],gaming:['#fyp','#gaming','#gamer','#twitch','#videogames','#gaminglife','#xbox','#ps5','#minecraft','#viral'],music:['#fyp','#music','#newmusic','#artist','#musicvideo','#producer','#beats','#hiphop','#rnb','#viralmusic']}};
+    var fallback=['#fyp','#viral','#trending','#foryou','#content','#creator','#follow','#like','#share','#explore'];
+    var tags=(allTags[plat]&&allTags[plat][niche])||fallback;
+    var tagsHtml='';
+    tags.forEach(function(t){tagsHtml+='<span style="padding:4px 12px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);color:var(--accent2);border-radius:100px;font-size:12px;font-family:JetBrains Mono,monospace">'+t+'</span>';});
+    document.getElementById('ht-out').innerHTML='<div class="out-box"><div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">'+tagsHtml+'</div><button class="btn btn-o btn-sm" onclick="navigator.clipboard.writeText(\''+tags.join(' ')+'\')">📋 Copy All</button></div>';
+  });
+}
+
+function genCaption() {
+  runToolProgress('Writing caption').then(function(){
+    var topic=document.getElementById('cap-t').value||'my content';
+    var tone=document.getElementById('cap-tone').value;
+    var cta=document.getElementById('cap-cta').value;
+    var ctaMap={follow:'Follow for daily tips 👇',comment:'Comment your thoughts below 💬',save:'Save this for later 🔖',subscribe:'Subscribe for exclusive content 👇'};
+    var toneMap={energetic:"LET'S GO! 🔥\n\n",educational:"Here is what most people don't know:\n\n",funny:"Nobody prepared me for this 😭\n\n",inspirational:"This changed everything for me ✨\n\n"};
+    var cap=(toneMap[tone]||'')+topic+'\n\n'+(ctaMap[cta]||'')+'\n\n#fyp #viral #trending';
+    document.getElementById('cap-out').innerHTML='<div class="out-box"><div style="white-space:pre-line;font-size:14px;margin-bottom:12px;line-height:1.6">'+cap+'</div><button class="btn btn-o btn-sm" onclick="navigator.clipboard.writeText(this.parentElement.querySelector(\'div\').textContent)">📋 Copy</button></div>';
+  });
+}
+
+function genHooks() {
+  runToolProgress('Generating hooks').then(function(){
+    var niche=document.getElementById('hk-n').value||'fitness';
+    var type=document.getElementById('hk-t').value;
+    var hooks={
+      pov:['POV: You just discovered the '+niche+' secret nobody talks about','POV: Your '+niche+' journey starts today 🔥','POV: You found the '+niche+' hack that changes everything'],
+      secret:['The '+niche+' secret they do not want you to know','Nobody told me this about '+niche+' until I was 10 years in','Stop scrolling — this '+niche+' truth will change your life'],
+      mistake:['The #1 '+niche+' mistake costing you thousands','I was doing '+niche+' wrong for 5 years — here is what I changed','Stop making this '+niche+' mistake RIGHT NOW'],
+      question:['Why is nobody talking about this '+niche+' hack?','Did you know '+niche+' works like this? (most people get it wrong)','What if your '+niche+' approach is completely backwards?'],
+      number:['3 '+niche+' hacks I wish I knew 10 years ago','7 '+niche+' secrets that changed my life','5 things no one tells you about '+niche]
+    };
+    var list=hooks[type]||hooks.pov;
+    var html='<div style="display:grid;gap:8px;margin-top:12px">';
+    list.forEach(function(h,i){
+      html+='<div class="out-box" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0"><span style="font-size:13px">'+(i+1)+'. '+h+'</span><button class="btn btn-o btn-sm" onclick="document.getElementById(\'vs-hook\').value=this.parentElement.querySelector(\'span\').textContent.substring(3)">Use</button></div>';
+    });
+    html+='</div>';
+    document.getElementById('hk-out').innerHTML=html;
+  });
+}
+
+function genClips() {
+  runToolProgress('Processing video').then(function(){
+    var dur=parseInt(document.getElementById('clip-dur').value)||15;
+    var clips=[
+      {t:'Viral Hook Opening',s:94,start:'0:00',end:'0:'+dur},
+      {t:'Key Reveal Moment',s:88,start:'0:'+dur,end:'0:'+(dur*2)},
+      {t:'Emotional Peak',s:82,start:'0:'+(dur*2),end:'0:'+(dur*3)},
+      {t:'Call to Action Close',s:79,start:'0:'+(dur*3),end:'0:'+(dur*4)},
+      {t:'B-Roll Highlight',s:73,start:'0:'+(dur*4),end:'end'}
+    ];
+    var html='<div style="display:grid;gap:10px;margin-top:12px">';
+    clips.forEach(function(c,i){
+      var col=c.s>=85?'var(--green)':c.s>=75?'var(--gold)':'var(--accent)';
+      var bg=c.s>=85?'rgba(0,230,118,0.15)':c.s>=75?'rgba(245,166,35,0.15)':'rgba(255,60,110,0.15)';
+      html+='<div style="display:grid;grid-template-columns:50px 1fr auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:var(--accent);text-align:center">'+(i+1)+'</div>'
+        +'<div><div style="font-size:13px;font-weight:500;margin-bottom:3px">'+c.t+'</div><div style="font-size:11px;color:var(--muted)">'+c.start+' - '+c.end+' · '+dur+'s clip</div></div>'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:22px;padding:6px 12px;border-radius:8px;background:'+bg+';color:'+col+'">'+c.s+'</div></div>';
+    });
+    html+='</div>';
+    document.getElementById('clip-out').innerHTML=html;
+  });
+}
+
+function genBios() {
+  runToolProgress('Writing bios').then(function(){
+    var name=document.getElementById('bio-n').value||'Creator';
+    var niche=document.getElementById('bio-niche').value||'lifestyle';
+    var bios=[
+      {plat:'TikTok',bio:name+' Daily '+niche+' content\nExclusive on Fanvue\nLink in bio 👇'},
+      {plat:'Instagram',bio:name+' · '+niche+' creator\nExclusive content available 💜\nDM for collabs 👇'},
+      {plat:'Fanvue',bio:'Hey I am '+name+'! I post daily '+niche+' content exclusively here. Subscribe for the full experience 🔥'},
+      {plat:'GlowX',bio:name+' — '+niche+' creator. Subscribe for exclusive content, daily posts & personal DMs 💜'}
+    ];
+    var html='<div style="display:grid;gap:10px;margin-top:12px">';
+    bios.forEach(function(b){
+      html+='<div class="out-box" style="margin-bottom:0">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:2px;color:var(--accent2);margin-bottom:8px">'+b.plat+'</div>'
+        +'<div style="white-space:pre-line;font-size:13px;line-height:1.6;margin-bottom:10px">'+b.bio+'</div>'
+        +'<button class="btn btn-o btn-sm" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)">📋 Copy</button>'
+        +'</div>';
+    });
+    html+='</div>';
+    document.getElementById('bio-out').innerHTML=html;
+  });
+}
+
+function genDM() {
+  runToolProgress('Writing DM script').then(function(){
+    var name=document.getElementById('dm-n').value||'gorgeous';
+    var type=document.getElementById('dm-t').value;
+    var scripts={
+      welcome:'Hey babe! Welcome to my page 💕\n\nI post exclusive content every day just for my subscribers 🔥\n\nIf you want something custom, just DM me — I am super responsive!\n\nXoxo 😘',
+      upsell:'Psst... I just posted something VERY exclusive as a PPV unlock 🔥\n\nOnly $9.99 and honestly it is my best content yet 👀\n\nWant me to send it your way? 💕',
+      reactivate:'Hey! I have been thinking about you 👀\n\nI have posted SO much exclusive content you have been missing...\n\nCome back and I will send you a special welcome-back unlock 🎁',
+      ppv:'🔥 NEW PPV just dropped and it is FIRE\n\nLimited time only — tap to unlock before it is gone! 👇'
+    };
+    var script=scripts[type]||scripts.welcome;
+    document.getElementById('dm-out').innerHTML='<div class="out-box"><div style="white-space:pre-line;font-size:14px;line-height:1.7;margin-bottom:12px">'+script+'</div><button class="btn btn-o btn-sm" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)">📋 Copy Script</button></div>';
+  });
+}
+
+function genTrends() {
+  runToolProgress('Scanning trends').then(function(){
+    var niche=document.getElementById('tr-n').value;
+    var trends=[
+      {t:'That girl '+niche+' routine',s:94,c:'+12%',hot:true},
+      {t:niche+' transformation 30 days',s:91,c:'+8%',hot:true},
+      {t:'POV '+niche+' secrets',s:87,c:'+5%',hot:false},
+      {t:niche+' hack nobody talks about',s:83,c:'+3%',hot:false},
+      {t:niche+' before and after',s:79,c:'+1%',hot:false}
+    ];
+    var html='';
+    trends.forEach(function(t,i){
+      html+='<div class="trend-item">'
+        +'<div class="trend-rank'+(t.hot?' hot':'')+'">'+( i+1)+'</div>'
+        +'<div class="trend-info"><div class="trend-title">'+t.t+'</div><div class="trend-meta">Score '+t.s+' · '+t.c+' this week '+(t.hot?'🔥':'')+'</div></div>'
+        +'<div class="trend-score">'+t.s+'</div></div>';
+    });
+    document.getElementById('tr-out').innerHTML=html;
+  });
+}
+
+function genEmails() {
+  runToolProgress('Writing email sequence').then(function(){
+    var name=document.getElementById('em-n').value||'Creator';
+    var emails=[
+      {sub:'You wont believe what '+name+' just posted...',preview:'Hey! '+name+' here — I just dropped something exclusive...'},
+      {sub:'Only 24 hours left to see this...',preview:'This is your last chance to unlock my most recent post...'},
+      {sub:name+' wants to know why you left',preview:'Hey, I noticed you have not been around lately...'}
+    ];
+    var html='<div style="display:grid;gap:10px;margin-top:12px">';
+    emails.forEach(function(e,i){
+      html+='<div class="out-box" style="margin-bottom:0">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:2px;color:var(--gold);margin-bottom:6px">EMAIL '+(i+1)+'</div>'
+        +'<div style="font-size:13px;font-weight:600;margin-bottom:4px">Subject: '+e.sub+'</div>'
+        +'<div style="font-size:12px;color:var(--muted)">'+e.preview+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+    document.getElementById('em-out').innerHTML=html;
+  });
+}
+
+// ── SCHEDULER ─────────────────────────────────────────────────────────────────
+function loadSchedule() {
+  var id=document.getElementById('sch-id').value.trim();
+  var days=document.getElementById('sch-days').value;
+  var plat=document.getElementById('sch-plat').value;
+  if(!id){alert('Enter a Creator ID');return;}
+  var bar=document.getElementById('sch-bar');
+  bar.classList.add('visible');
+  var gp=showGlobalProgress();
+  var steps=[20,50,80,100];
+  var labels=['Connecting to database...','Fetching creator profile...','Loading scheduled posts...','Done'];
+  var i=0;
+  var iv=setInterval(function(){
+    if(i>=steps.length){clearInterval(iv);gp.stop();return;}
+    animBar('sch-fill','sch-pct','sch-label',steps[i],labels[i]);
+    i++;
+  },400);
+  setTimeout(function(){
+    fetch(API+'/api/marketing/scheduled/'+id+'?days='+days)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var posts=(data.posts||[]).filter(function(p){return !plat||p.platform===plat;});
+      if(!posts.length){document.getElementById('sch-out').innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">No posts found — generate a calendar first</div>';return;}
+      var html='<table><thead><tr><th>Time</th><th>Platform</th><th>Content</th><th>Status</th></tr></thead><tbody>';
+      posts.forEach(function(p){
+        var c=typeof p.content==='string'?JSON.parse(p.content):p.content;
+        var t=new Date(p.scheduled_time);
+        html+='<tr><td style="white-space:nowrap">'+t.toLocaleDateString()+' '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</td>'
+          +'<td><span class="badge bd-'+p.platform+'">'+p.platform+'</span></td>'
+          +'<td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c&&(c.theme||c.caption)||'—')+'</td>'
+          +'<td><span class="badge bd-'+p.status+'">'+p.status+'</span></td></tr>';
+      });
+      html+='</tbody></table>';
+      document.getElementById('sch-out').innerHTML=html;
+    })
+    .catch(function(e){document.getElementById('sch-out').innerHTML='<div style="color:var(--accent);padding:20px">Error: '+e.message+'</div>';});
+  }, 1800);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',function(){
+  initNiches();
+  var sp=JSON.parse(localStorage.getItem('emp_plats')||'[]');
+  var sn=JSON.parse(localStorage.getItem('emp_niches')||'[]');
+  sp.forEach(function(p){var el=document.querySelector('[data-p="'+p+'"]');if(el){el.classList.add('on');selPlats.add(p);}});
+  sn.forEach(function(n){var el=document.querySelector('[data-n="'+n+'"]');if(el){el.classList.add('on');selNiches.add(n);}});
+  updatePlatBar();
+  document.getElementById('niche-fill').style.width=(selNiches.size/NICHES_LIST.length*100)+'%';
+  document.getElementById('niche-pct').textContent=selNiches.size+' / '+NICHES_LIST.length+' selected';
+  fetch(API+'/api/creators').then(function(r){return r.json();}).then(function(d){
+    var n=d.count||75;
+    document.getElementById('ov-creators').textContent=n;
+    document.getElementById('hdr-creators').textContent=n+' creators';
+  }).catch(function(){});
+});
+</script>
+</body>
+</html>
