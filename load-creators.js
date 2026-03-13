@@ -2,8 +2,7 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const pool = new Pool({ connectionString: process.argv[2] });
 async function load() {
-  let raw = fs.readFileSync(process.argv[3], 'utf8');
-  raw = raw.replace(/^\uFEFF/, '').trim();
+  const raw = fs.readFileSync(process.argv[3], 'utf8');
   const data = JSON.parse(raw);
   const creators = data.creators || data;
   console.log('Loading', creators.length, 'creators...');

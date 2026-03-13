@@ -50,7 +50,7 @@ router.get('/:id', async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM creators WHERE id=$1', [req.params.id]);
     if (!r.rows[0]) return res.status(404).json({ error: 'Creator not found' });
-    const c = r.rows[0];
+        const c = r.rows[0];
     function safeParse(val, fallback) {
       if (val === null || val === undefined) return fallback;
       if (typeof val === "object") return val;
@@ -249,4 +249,5 @@ router.get('/revenue/summary', adminAuth, async (req, res) => {
 });
 
 module.exports = router;
+
 
