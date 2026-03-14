@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Influencer Studio — Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #C9A84C;
+  --gold2: #F0D080;
+  --black: #030303;
+  --dark: #080808;
+  --card: #0D0D0D;
+  --border: #1A1A1A;
+  --text: #E8E8E8;
+  --muted: #555;
+  --green: #00E676;
+  --red: #FF4444;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;scroll-behavior:smooth}
+
+body{
+  background:var(--black);
+  color:var(--text);
+  font-family:'Outfit',sans-serif;
+  font-weight:300;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 90% 90%, rgba(201,168,76,0.04) 0%, transparent 50%);
+  pointer-events:none;
+  z-index:0;
+}
+
+body::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:999;
+  opacity:0.4;
+}
+
+.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 24px}
+
+/* ANNOUNCE BAR */
+.announce{
+  background:var(--gold);
+  color:#000;
+  text-align:center;
+  padding:10px 20px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1px;
+  position:relative;
+  z-index:2;
+}
+
+/* TOP NAV */
+.topbar{
+  position:relative;z-index:2;
+  padding:20px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid var(--border);
+}
+.logo{font-family:'Bebas Neue';font-size:24px;letter-spacing:3px;color:var(--gold)}
+.logo span{color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-link{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:1px;transition:color 0.2s}
+.topbar-link:hover{color:var(--gold)}
+.topbar-badge{
+  font-size:11px;color:var(--gold);
+  border:1px solid rgba(201,168,76,0.3);
+  padding:4px 14px;border-radius:20px;letter-spacing:1px;
+}
+
+/* HERO */
+.hero{text-align:center;padding:70px 0 50px;position:relative;z-index:1}
+.hero-eye{font-size:11px;letter-spacing:4px;color:var(--gold);margin-bottom:20px;font-weight:500}
+.hero h1{
+  font-family:'Bebas Neue';
+  font-size:clamp(54px,11vw,108px);
+  line-height:0.9;
+  letter-spacing:2px;
+  margin-bottom:20px;
+}
+.hero h1 em{font-family:'Playfair Display';color:var(--gold);font-style:italic;font-size:0.85em}
+.hero-sub{font-size:15px;color:#888;max-width:560px;margin:0 auto 36px;line-height:1.8}
+.hero-sub strong{color:var(--text)}
+
+/* COUNTDOWN */
+.cd-wrap{
+  display:inline-flex;background:var(--card);
+  border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;margin-bottom:40px;
+}
+.cd{padding:14px 20px;text-align:center;border-right:1px solid var(--border)}
+.cd:last-child{border-right:none}
+.cd-n{font-family:'Bebas Neue';font-size:32px;color:var(--gold);display:block;line-height:1}
+.cd-l{font-size:9px;color:var(--muted);letter-spacing:2px}
+
+/* FOUNDING BANNER */
+.founding{
+  background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));
+  border:1px solid rgba(201,168,76,0.4);
+  border-radius:12px;padding:16px 24px;
+  text-align:center;margin-bottom:50px;
+  font-size:14px;color:var(--gold2);
+  position:relative;z-index:1;
+}
+.founding strong{font-weight:600}
+.spots{
+  display:inline-block;background:var(--gold);color:#000;
+  font-size:11px;font-weight:700;padding:2px 10px;
+  border-radius:4px;margin-left:8px;letter-spacing:1px;
+}
+
+/* SECTION LABELS */
+.sec-eye{font-size:10px;letter-spacing:4px;color:var(--gold);margin-bottom:10px;font-weight:500}
+.sec-title{font-family:'Bebas Neue';font-size:clamp(36px,6vw,62px);line-height:0.95;margin-bottom:12px}
+.sec-desc{font-size:14px;color:#777;line-height:1.8;max-width:600px;margin-bottom:36px}
+
+/* PLANS GRID */
+.plans{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;margin-bottom:12px;
+}
+@media(max-width:720px){.plans{grid-template-columns:1fr}}
+
+.plan{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:32px 24px;
+  position:relative;overflow:hidden;
+  transition:transform 0.2s,border-color 0.2s;
+}
+.plan:hover{transform:translateY(-4px);border-color:rgba(201,168,76,0.4)}
+.plan.best{
+  border-color:var(--gold);
+  background:linear-gradient(160deg,#0F0F0F 0%,#0C0B00 100%);
+}
+.plan.best::before{
+  content:'⭐ MOST POPULAR';
+  position:absolute;top:0;left:0;right:0;
+  background:var(--gold);color:#000;
+  font-size:9px;letter-spacing:2px;font-weight:700;
+  text-align:center;padding:5px;
+}
+.plan.best .plan-inner{margin-top:20px}
+
+.plan-inner{}
+.plan-name{font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:12px}
+.plan-was{font-size:13px;color:#2a2a2a;text-decoration:line-through;margin-bottom:4px}
+.plan-price{font-family:'Bebas Neue';font-size:62px;color:var(--gold);line-height:1}
+.plan-price sup{font-size:22px;vertical-align:top;padding-top:12px}
+.plan-mo{font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px}
+.plan-creators{font-size:13px;color:var(--green);font-weight:600;margin-bottom:4px}
+.plan-tagline{font-size:12px;color:#888;margin-bottom:18px;line-height:1.5;font-style:italic}
+.plan-hr{height:1px;background:var(--border);margin:16px 0}
+
+.plan-list{list-style:none;margin-bottom:24px}
+.plan-list li{
+  font-size:12px;color:#888;padding:5px 0;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  display:flex;gap:8px;line-height:1.4;
+}
+.y{color:var(--gold)} .n{color:#222}
+.plan-list li.dim{opacity:0.28}
+
+/* PLAN BUTTONS */
+.plan-btn{
+  display:block;width:100%;padding:14px 10px;
+  border-radius:8px;
+  font-family:'Outfit';font-size:12px;font-weight:700;
+  letter-spacing:1px;cursor:pointer;border:none;
+  text-align:center;text-decoration:none;
+  transition:all 0.2s;line-height:1.2;
+}
+.btn-gold{background:var(--gold);color:#000}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-out{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-out:hover{border-color:var(--gold);color:var(--gold)}
+.paypal-lock{text-align:center;margin-top:8px;font-size:10px;color:#333;letter-spacing:0.5px}
+
+/* ENTERPRISE FULL WIDTH */
+.enterprise{
+  background:linear-gradient(135deg,#090900,#060600);
+  border:1px solid rgba(201,168,76,0.5);
+  border-radius:16px;padding:40px;
+  display:grid;grid-template-columns:1fr auto;
+  gap:32px;align-items:center;
+  margin-bottom:12px;
+}
+@media(max-width:600px){.enterprise{grid-template-columns:1fr}}
+.ent-label{font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:8px}
+.ent-title{font-family:'Bebas Neue';font-size:38px;line-height:0.95;margin-bottom:10px;letter-spacing:1px}
+.ent-desc{font-size:13px;color:#777;line-height:1.8;margin-bottom:16px}
+.ent-tags{display:flex;gap:8px;flex-wrap:wrap}
+.ent-tag{
+  font-size:11px;color:#AAA;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:4px;padding:3px 10px;
+}
+.ent-right{text-align:center;min-width:160px}
+.ent-price{font-family:'Bebas Neue';font-size:52px;color:var(--gold);line-height:1}
+.ent-then{font-size:12px;color:#555;margin:4px 0}
+.ent-earn{font-size:12px;color:var(--green);font-weight:600;margin-bottom:14px}
+.ent-btn{
+  display:block;padding:14px 24px;
+  background:var(--gold);color:#000;
+  border:none;border-radius:8px;
+  font-family:'Outfit';font-size:12px;font-weight:700;
+  letter-spacing:1px;cursor:pointer;
+  text-align:center;text-decoration:none;
+  transition:all 0.2s;
+}
+.ent-btn:hover{background:var(--gold2);transform:translateY(-1px)}
+
+/* EXTRA CREATOR SLOT */
+.extra-slot{
+  background:rgba(201,168,76,0.05);
+  border:1px solid rgba(201,168,76,0.25);
+  border-radius:12px;padding:24px;
+  display:flex;justify-content:space-between;
+  align-items:center;flex-wrap:wrap;gap:16px;
+  margin-bottom:0;
+}
+.extra-text h3{font-family:'Bebas Neue';font-size:26px;letter-spacing:1px;margin-bottom:4px}
+.extra-text p{font-size:13px;color:#888}
+.extra-price-box{text-align:center}
+.extra-price{font-family:'Bebas Neue';font-size:48px;color:var(--gold);line-height:1}
+.extra-per{font-size:11px;color:var(--muted)}
+.extra-btn{
+  margin-top:10px;padding:10px 24px;
+  background:var(--gold);color:#000;
+  border:none;border-radius:6px;
+  font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;
+  display:block;text-align:center;transition:all 0.2s;
+}
+.extra-btn:hover{background:var(--gold2)}
+
+/* SECTION DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:80px 0 0}
+
+/* ADDON SECTION */
+.addon-section{padding:80px 0;background:var(--dark)}
+.addon-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:24px}
+.addon-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:24px;
+  transition:all 0.2s;position:relative;overflow:hidden;
+}
+.addon-card:hover{border-color:rgba(201,168,76,0.3);transform:translateY(-2px)}
+.addon-icon{font-size:24px;margin-bottom:12px}
+.addon-name{
+  font-family:'Bebas Neue';font-size:18px;
+  letter-spacing:1px;margin-bottom:8px;color:var(--text);
+}
+.addon-desc{font-size:12px;color:#666;line-height:1.7;margin-bottom:12px}
+.addon-earn{font-size:11px;color:var(--green);font-weight:600;margin-bottom:14px}
+.addon-price-row{display:flex;justify-content:space-between;align-items:center}
+.addon-mo-price{font-family:'Bebas Neue';font-size:28px;color:var(--gold)}
+.addon-mo-price span{font-family:'Outfit';font-size:11px;color:var(--muted)}
+.addon-add{
+  padding:8px 16px;background:transparent;
+  border:1px solid var(--border);border-radius:6px;
+  color:var(--text);font-size:11px;font-weight:600;
+  letter-spacing:1px;cursor:pointer;transition:all 0.2s;
+}
+.addon-add:hover{border-color:var(--gold);color:var(--gold)}
+
+/* PLATFORMS */
+.platform-section{padding:80px 0}
+.platform-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:24px}
+.platform-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:16px;
+  display:flex;align-items:center;gap:12px;
+  transition:border-color 0.2s;
+}
+.platform-card:hover{border-color:rgba(201,168,76,0.3)}
+.platform-card.owned{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.04)}
+.plat-icon{font-size:20px}
+.plat-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.plat-cut{font-size:10px;color:var(--muted)}
+.plat-badge{
+  font-size:9px;color:var(--gold);
+  border:1px solid rgba(201,168,76,0.3);
+  padding:2px 6px;border-radius:3px;
+  margin-top:3px;letter-spacing:1px;display:inline-block;
+}
+
+/* EARNINGS TABLE */
+.earn-section{padding:80px 0;background:var(--dark)}
+.earn-table{width:100%;border-collapse:collapse;margin-top:24px;font-size:13px}
+.earn-table th{
+  background:#0F0F0F;
+  font-size:9px;letter-spacing:3px;color:var(--gold);
+  padding:14px 16px;text-align:left;
+  border-bottom:2px solid var(--border);
+}
+.earn-table td{padding:12px 16px;border-bottom:1px solid var(--border);color:#999}
+.earn-table tr:hover td{background:rgba(255,255,255,0.01)}
+.earn-table .total td{background:rgba(201,168,76,0.05);color:var(--gold);font-weight:600;font-size:14px}
+.green{color:var(--green);font-weight:600}
+
+/* DFY SECTION */
+.dfy-section{padding:80px 0}
+
+/* FAQ */
+.faq-section{padding:80px 0;background:var(--dark)}
+.faq{border-bottom:1px solid var(--border)}
+.faq-q{
+  padding:18px 0;font-size:14px;font-weight:500;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:color 0.2s;
+}
+.faq-q:hover{color:var(--gold)}
+.faq-q .arr{color:var(--gold);font-size:18px;transition:transform 0.2s}
+.faq-a{padding:0 0 18px;font-size:13px;color:#777;line-height:1.8;display:none}
+.faq.open .faq-a{display:block}
+.faq.open .arr{transform:rotate(45deg)}
+
+/* FINAL CTA */
+.final{
+  text-align:center;padding:100px 20px;
+  background:radial-gradient(ellipse 60% 40% at 50% 50%,rgba(201,168,76,0.07) 0%,transparent 70%);
+}
+.final h2{font-family:'Bebas Neue';font-size:clamp(44px,8vw,90px);line-height:0.92;margin-bottom:16px}
+.final h2 em{color:var(--gold);font-family:'Playfair Display';font-style:italic}
+.final p{font-size:15px;color:#777;margin-bottom:28px;line-height:1.7;max-width:500px;margin-left:auto;margin-right:auto}
+.email-row{display:flex;gap:8px;max-width:460px;margin:0 auto 12px;flex-wrap:wrap}
+.email-row input{
+  flex:1;padding:14px 16px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);
+  font-family:'Outfit';font-size:14px;min-width:180px;
+}
+.email-row input:focus{outline:none;border-color:var(--gold)}
+.email-row input::placeholder{color:var(--muted)}
+.btn-main{
+  padding:14px 28px;background:var(--gold);color:#000;
+  border:none;border-radius:6px;font-weight:700;
+  font-size:13px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;
+}
+.btn-main:hover{background:var(--gold2)}
+
+/* FOOTER */
+.footer{
+  text-align:center;padding:32px 20px;
+  border-top:1px solid var(--border);
+  font-size:11px;color:var(--muted);
+  position:relative;z-index:1;
+}
+
+.section{padding:80px 0;position:relative;z-index:1}
+</style>
+</head>
+<body>
+
+<div class="announce">🔥 Founding Member Pricing — Limited Spots · Price Increases At Public Launch</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">AI <span>Influencer</span> Studio</div>
+    <div class="topbar-right">
+      <a href="#plans" class="topbar-link">PLANS</a>
+      <a href="#addons" class="topbar-link">ADD-ONS</a>
+      <a href="#earnings" class="topbar-link">EARNINGS</a>
+      <div class="topbar-badge">FOUNDING PRICING</div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="section">
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-eye">// AI INFLUENCER STUDIO — DOLLAR DOUBLE MARKETING</div>
+      <h1>YOUR AI<br><em>INFLUENCER.</em><br>YOUR EMPIRE.</h1>
+      <p class="hero-sub">
+        Pick your AI avatar from our library. Deploy across <strong>13 platforms automatically</strong>. 
+        Earn while you sleep. No tech skills needed.
+      </p>
+
+      <div class="cd-wrap">
+        <div class="cd"><span class="cd-n" id="dd">14</span><span class="cd-l">DAYS</span></div>
+        <div class="cd"><span class="cd-n" id="hh">08</span><span class="cd-l">HRS</span></div>
+        <div class="cd"><span class="cd-n" id="mm">47</span><span class="cd-l">MIN</span></div>
+        <div class="cd"><span class="cd-n" id="ss">22</span><span class="cd-l">SEC</span></div>
+      </div>
+
+      <div class="founding">
+        <strong>Founding Member Pricing</strong> — Lock in your rate before the price doubles at public launch.
+        <span class="spots">67 SPOTS LEFT</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr style="border:none;border-top:1px solid #1A1A1A">
+
+<!-- PLANS -->
+<div class="section" id="plans">
+  <div class="wrap">
+    <div class="sec-eye">// CHOOSE YOUR PLAN</div>
+    <h2 class="sec-title">PICK YOUR BASE.<br>SCALE YOUR INCOME.</h2>
+    <p class="sec-desc">Every plan includes a real AI influencer avatar from our model library. Choose how many creators you want — then add income channels as you grow.</p>
+
+    <div class="plans">
+
+      <!-- STARTER -->
+      <div class="plan">
+        <div class="plan-inner">
+          <div class="plan-name">// STARTER</div>
+          <div class="plan-was">Was $97/mo</div>
+          <div class="plan-price"><sup>$</sup>49</div>
+          <div class="plan-mo">/MONTH</div>
+          <div class="plan-creators">Access to basic model library</div>
+          <div class="plan-tagline">"Taste the power. 3 videos a day or 15 seconds daily — enough to see what's possible."</div>
+          <div class="plan-hr"></div>
+          <ul class="plan-list">
+            <li><span class="y">✓</span> Pick from basic AI avatar models</li>
+            <li><span class="y">✓</span> 3 videos/day OR 15 secs/day</li>
+            <li><span class="y">✓</span> TikTok + Instagram auto-posting</li>
+            <li><span class="y">✓</span> Script + caption writer</li>
+            <li><span class="y">✓</span> Viral score analyzer</li>
+            <li><span class="y">✓</span> Basic analytics dashboard</li>
+            <li class="dim"><span class="n">✗</span> Fanvue pipeline (Pro+)</li>
+            <li class="dim"><span class="n">✗</span> Adult content (Pro+)</li>
+          </ul>
+          <a href="https://www.paypal.com/ncp/links/ALPVFGXJYU9T2" target="_blank" class="plan-btn btn-out">BECOME THE NEW YOU →</a>
+          <div class="paypal-lock">🔒 Secured by PayPal</div>
+        </div>
+      </div>
+
+      <!-- PRO -->
+      <div class="plan best">
+        <div class="plan-inner">
+          <div class="plan-name">// FANVUE PRO</div>
+          <div class="plan-was">Was $397/mo</div>
+          <div class="plan-price"><sup>$</sup>197</div>
+          <div class="plan-mo">/MONTH</div>
+          <div class="plan-creators">1 AI Creator + Full Pipeline</div>
+          <div class="plan-tagline">"One creator. All platforms. Income running 24/7 — even when you're not."</div>
+          <div class="plan-hr"></div>
+          <ul class="plan-list">
+            <li><span class="y">✓</span> 1 AI creator — premium model library</li>
+            <li><span class="y">✓</span> Unlimited posts — all 13 platforms</li>
+            <li><span class="y">✓</span> Full Fanvue + OnlyFans pipeline</li>
+            <li><span class="y">✓</span> Adult content generation unlocked</li>
+            <li><span class="y">✓</span> AI DM automation included</li>
+            <li><span class="y">✓</span> Voice cloning + video generation</li>
+            <li><span class="y">✓</span> PPV content calendar</li>
+            <li><span class="y">✓</span> Viral scorer + hashtag optimizer</li>
+            <li><span class="y">✓</span> Weekly revenue report</li>
+            <li><span class="y">✓</span> Priority support</li>
+          </ul>
+          <a href="https://www.paypal.com/ncp/links/ZX9KMPZ4JSKA4" target="_blank" class="plan-btn btn-gold">FEAR NO MORE →</a>
+          <div class="paypal-lock">🔒 Secured by PayPal</div>
+        </div>
+      </div>
+
+      <!-- EMPIRE -->
+      <div class="plan">
+        <div class="plan-inner">
+          <div class="plan-name">// EMPIRE</div>
+          <div class="plan-was">Was $997/mo</div>
+          <div class="plan-price"><sup>$</sup>497</div>
+          <div class="plan-mo">/MONTH</div>
+          <div class="plan-creators">3 AI Creators + Everything</div>
+          <div class="plan-tagline">"Three creators. Three income streams. One dashboard. Zero extra effort."</div>
+          <div class="plan-hr"></div>
+          <ul class="plan-list">
+            <li><span class="y">✓</span> 3 AI creator profiles</li>
+            <li><span class="y">✓</span> Everything in Pro × 3</li>
+            <li><span class="y">✓</span> Whale fan management</li>
+            <li><span class="y">✓</span> Custom PPV request handler</li>
+            <li><span class="y">✓</span> Character consistency AI</li>
+            <li><span class="y">✓</span> Brand deal finder</li>
+            <li><span class="y">✓</span> Cross-platform analytics</li>
+            <li><span class="y">✓</span> GLOWX early access</li>
+            <li><span class="y">✓</span> Dedicated account manager</li>
+            <li><span class="y">✓</span> All add-ons available</li>
+          </ul>
+          <a href="https://www.paypal.com/ncp/links/58R4VQQBQHU8U" target="_blank" class="plan-btn btn-out">STRUGGLE'S END →</a>
+          <div class="paypal-lock">🔒 Secured by PayPal</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- EXTRA CREATOR SLOT -->
+    <div class="extra-slot" style="margin-top:12px;margin-bottom:12px">
+      <div class="extra-text">
+        <h3>➕ NEED MORE CREATORS?</h3>
+        <p>Add extra AI creator slots to any plan. Each one is a new income stream. Stack as many as you want.</p>
+      </div>
+      <div class="extra-price-box">
+        <div class="extra-price">$19</div>
+        <div class="extra-per">/month per extra creator</div>
+        <button class="extra-btn">ADD CREATOR SLOT →</button>
+      </div>
+    </div>
+
+    <!-- ENTERPRISE -->
+    <div class="enterprise" style="margin-top:12px">
+      <div>
+        <div class="ent-label">// ENTERPRISE — WHITE LABEL</div>
+        <div class="ent-title">YOUR BRAND.<br>YOUR PLATFORM.<br>9 CREATORS.</div>
+        <p class="ent-desc">We build your complete white-label AI Influencer Studio. Your logo, your domain, your pricing. 9 premium creators deployed. Full platform access. This is for serious operators who want to resell or run an agency.</p>
+        <div class="ent-tags">
+          <span class="ent-tag">9 AI creators built</span>
+          <span class="ent-tag">White-label branding</span>
+          <span class="ent-tag">Custom domain</span>
+          <span class="ent-tag">All platforms connected</span>
+          <span class="ent-tag">GLOWX founding access</span>
+          <span class="ent-tag">Resell rights</span>
+          <span class="ent-tag">Dedicated manager</span>
+          <span class="ent-tag">Revenue share option</span>
+        </div>
+      </div>
+      <div class="ent-right">
+        <div class="ent-price">$3,500</div>
+        <div class="ent-then">setup · then $997/month</div>
+        <div class="ent-earn">Potential: $50K-100K/mo</div>
+        <a href="https://www.paypal.com/ncp/links/MWTK2QP5WQSKS" target="_blank" class="ent-btn">BUILD MY EMPIRE →</a>
+        <div class="paypal-lock" style="margin-top:8px">🔒 Secured by PayPal</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<hr style="border:none;border-top:1px solid #1A1A1A">
+
+<!-- ADDON CHANNELS -->
+<div class="addon-section" id="addons">
+  <div class="wrap">
+    <div class="sec-eye">// INCOME CHANNEL ADD-ONS</div>
+    <h2 class="sec-title">EVERY ADD-ON.<br>ANOTHER INCOME<br>STREAM.</h2>
+    <p class="sec-desc">Your AI creator earns from posting. Add these channels and multiply that income. Each one runs automatically — no extra work from you.</p>
+
+    <div class="addon-grid">
+      <div class="addon-card">
+        <div class="addon-icon">💬</div>
+        <div class="addon-name">PLATFORM AI DMs</div>
+        <div class="addon-desc">Your AI creator responds to every fan DM on Fanvue, OnlyFans, GLOWX, Instagram, and Telegram. In character. Personalised. Natural upsells in every reply. Runs 24/7.</div>
+        <div class="addon-earn">↑ Adds $500–2,000/mo per creator</div>
+        <div class="addon-price-row">
+          <div class="addon-mo-price">$15<span>/mo per creator</span></div>
+          <button class="addon-add">ADD →</button>
+        </div>
+      </div>
+
+      <div class="addon-card">
+        <div class="addon-icon">📲</div>
+        <div class="addon-name">WHATSAPP AI CHAT</div>
+        <div class="addon-desc">Your creator gets a real WhatsApp Business number. Fans pay for private access. AI responds as the creator — text, voice notes, photo previews. Mass broadcast built in.</div>
+        <div class="addon-earn">↑ Adds $500–2,000/mo per creator</div>
+        <div class="addon-price-row">
+          <div class="addon-mo-price">$19<span>/mo per creator</span></div>
+          <button class="addon-add">ADD →</button>
+        </div>
+      </div>
+
+      <div class="addon-card">
+        <div class="addon-icon">📞</div>
+        <div class="addon-name">AI CHAT LINE</div>
+        <div class="addon-desc">Fans call a real phone number and pay per minute to chat with your AI creator. AI listens, understands, and responds in real-time in the creator's cloned voice. You earn per minute 24/7.</div>
+        <div class="addon-earn">↑ Adds $300–1,500/mo per creator</div>
+        <div class="addon-price-row">
+          <div class="addon-mo-price">$35<span>/mo per creator</span></div>
+          <button class="addon-add">ADD →</button>
+        </div>
+      </div>
+
+      <div class="addon-card">
+        <div class="addon-icon">🎙️</div>
+        <div class="addon-name">LIVE AI VOICE CALLS</div>
+        <div class="addon-desc">Fans book and pay upfront for 15, 30, or 60-minute voice sessions with your AI creator. Real conversation. Real cloned voice. Completely automated. No human needed.</div>
+        <div class="addon-earn">↑ Adds $500–3,000/mo per creator</div>
+        <div class="addon-price-row">
+          <div class="addon-mo-price">$49<span>/mo per creator</span></div>
+          <button class="addon-add">ADD →</button>
+        </div>
+      </div>
+
+      <div class="addon-card">
+        <div class="addon-icon">💜</div>
+        <div class="addon-name">AI PHONE LINE</div>
+        <div class="addon-desc">Premium per-minute chat line. $1.99–$4.99/min. Fans purchase credits upfront. You earn 70% of every minute. AI handles everything — sessions fully automated.</div>
+        <div class="addon-earn">↑ Adds $500–2,000/mo per creator</div>
+        <div class="addon-price-row">
+          <div class="addon-mo-price">$29<span>/mo per creator</span></div>
+          <button class="addon-add">ADD →</button>
+        </div>
+      </div>
+
+      <div class="addon-card">
+        <div class="addon-icon">🌸</div>
+        <div class="addon-name">INTERACTIVE TOY CONTROL</div>
+        <div class="addon-desc">Connect Lovense, We-Vibe, Kiiroo. Fans tip to control intensity on live streams. Most tipped feature on any platform. Fully automated — AI orchestrates everything.</div>
+        <div class="addon-earn">↑ Adds $500–5,000/mo per creator</div>
+        <div class="addon-price-row">
+          <div class="addon-mo-price">$39<span>/mo per creator</span></div>
+          <button class="addon-add">ADD →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr style="border:none;border-top:1px solid #1A1A1A">
+
+<!-- PLATFORMS -->
+<div class="platform-section">
+  <div class="wrap">
+    <div class="sec-eye">// WHERE YOUR AI CREATOR EARNS</div>
+    <h2 class="sec-title">13 PLATFORMS.<br>ONE DASHBOARD.</h2>
+    <p class="sec-desc">Your AI creator posts to all of these simultaneously. Every platform is another income stream. GLOWX is ours — highest payout anywhere.</p>
+
+    <div class="platform-grid">
+      <div class="platform-card owned">
+        <div class="plat-icon">✨</div>
+        <div>
+          <div class="plat-name">GLOWX</div>
+          <div class="plat-cut">90% payout — weekly</div>
+          <div class="plat-badge">OUR PLATFORM</div>
+        </div>
+      </div>
+      <div class="platform-card owned">
+        <div class="plat-icon">🌐</div>
+        <div>
+          <div class="plat-name">NVME.LIVE</div>
+          <div class="plat-cut">88% payout — weekly</div>
+          <div class="plat-badge">OUR PLATFORM</div>
+        </div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">💜</div>
+        <div><div class="plat-name">Fanvue</div><div class="plat-cut">85% payout — weekly</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">🔷</div>
+        <div><div class="plat-name">OnlyFans</div><div class="plat-cut">80% payout — monthly</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">🟣</div>
+        <div><div class="plat-name">Fansly</div><div class="plat-cut">80% payout — weekly</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">🟠</div>
+        <div><div class="plat-name">Patreon</div><div class="plat-cut">88–95% payout</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">📸</div>
+        <div><div class="plat-name">Instagram</div><div class="plat-cut">Auto-posting</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">🎵</div>
+        <div><div class="plat-name">TikTok</div><div class="plat-cut">Auto-posting</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">▶️</div>
+        <div><div class="plat-name">YouTube</div><div class="plat-cut">Auto-posting</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">🔴</div>
+        <div><div class="plat-name">ManyVids</div><div class="plat-cut">60–80% payout</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">⭐</div>
+        <div><div class="plat-name">AVN Stars</div><div class="plat-cut">70% payout</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">🎬</div>
+        <div><div class="plat-name">JustForFans</div><div class="plat-cut">65% payout</div></div>
+      </div>
+      <div class="platform-card">
+        <div class="plat-icon">🔒</div>
+        <div><div class="plat-name">Unlockd</div><div class="plat-cut">80% payout</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr style="border:none;border-top:1px solid #1A1A1A">
+
+<!-- EARNINGS TABLE -->
+<div class="earn-section" id="earnings">
+  <div class="wrap">
+    <div class="sec-eye">// STACK THE ADD-ONS · STACK THE INCOME</div>
+    <h2 class="sec-title">WHAT ONE CREATOR<br>CAN EARN.</h2>
+
+    <table class="earn-table">
+      <tr>
+        <th>INCOME STREAM</th>
+        <th>ADD-ON COST</th>
+        <th>MONTHLY EARNING</th>
+        <th>ROI</th>
+      </tr>
+      <tr><td>Base posting (Fanvue Pro plan)</td><td>Included</td><td class="green">$2,000–4,000</td><td class="green">10–20x</td></tr>
+      <tr><td>Platform AI DMs</td><td>$15/mo</td><td class="green">$500–2,000</td><td class="green">33–133x</td></tr>
+      <tr><td>WhatsApp AI Chat</td><td>$19/mo</td><td class="green">$500–2,000</td><td class="green">26–105x</td></tr>
+      <tr><td>AI Chat Line</td><td>$35/mo</td><td class="green">$300–1,500</td><td class="green">9–43x</td></tr>
+      <tr><td>Live AI Voice Calls</td><td>$49/mo</td><td class="green">$500–3,000</td><td class="green">10–61x</td></tr>
+      <tr><td>AI Phone Line</td><td>$29/mo</td><td class="green">$500–2,000</td><td class="green">17–69x</td></tr>
+      <tr><td>Interactive Toy Sessions</td><td>$39/mo</td><td class="green">$500–5,000</td><td class="green">13–128x</td></tr>
+      <tr class="total">
+        <td>ONE CREATOR — ALL ADD-ONS</td>
+        <td>$197 + $186/mo</td>
+        <td>$4,800–19,500/mo</td>
+        <td>13–52x ROI</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<hr style="border:none;border-top:1px solid #1A1A1A">
+
+<!-- COURSE -->
+<div class="dfy-section">
+  <div class="wrap">
+    <div style="background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:40px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;margin-bottom:16px" class="dfy-grid">
+      <div>
+        <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:8px">// AI INFLUENCER COURSE</div>
+        <div style="font-family:'Bebas Neue';font-size:36px;line-height:0.95;margin-bottom:10px;letter-spacing:1px">LEARN THE FULL<br>SYSTEM.</div>
+        <p style="font-size:13px;color:#777;line-height:1.8;margin-bottom:16px">Everything you need to go from zero to your first AI influencer earning. Video course, prompt engineering, creator setup, and 1 month GlowX FREE.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">Full video course</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">Prompt engineering</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">Creator setup guide</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">1 month GlowX FREE</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">Lifetime updates</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">Community access</span>
+        </div>
+      </div>
+      <div style="text-align:center;min-width:150px">
+        <div style="font-family:'Bebas Neue';font-size:52px;color:var(--gold);line-height:1">$97</div>
+        <div style="font-size:12px;color:#555;margin:4px 0">one-time payment</div>
+        <div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:14px">Lifetime access</div>
+        <a href="https://www.paypal.com/ncp/links/WNJX2AZ66TU2S" target="_blank" style="display:block;padding:12px 24px;background:var(--gold);color:#000;border-radius:7px;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;transition:all 0.2s">START LEARNING →</a>
+        <div class="paypal-lock" style="margin-top:8px">🔒 Secured by PayPal</div>
+      </div>
+    </div>
+
+    <!-- DFY -->
+    <div style="background:linear-gradient(135deg,#090900,#060600);border:1px solid rgba(201,168,76,0.4);border-radius:16px;padding:40px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center" class="dfy-grid">
+      <div>
+        <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:8px">// DONE FOR YOU — ZERO EFFORT</div>
+        <div style="font-family:'Bebas Neue';font-size:36px;line-height:0.95;margin-bottom:10px;letter-spacing:1px">WE BUILD IT ALL.<br>YOU COLLECT WEEKLY.</div>
+        <p style="font-size:13px;color:#777;line-height:1.8;margin-bottom:16px">We set up your creators, activate every add-on, connect all platforms, manage your Fanvue page, handle all DMs, and send you a monthly report. You do nothing except check your bank.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">5 creators built</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">All add-ons activated</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">All platforms connected</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">DMs handled 24/7</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">Monthly report</span>
+          <span style="font-size:11px;color:#AAA;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:3px 10px">Zero work from you</span>
+        </div>
+      </div>
+      <div style="text-align:center;min-width:150px">
+        <div style="font-family:'Bebas Neue';font-size:52px;color:var(--gold);line-height:1">$2,500</div>
+        <div style="font-size:12px;color:#555;margin:4px 0">setup · then $997/month</div>
+        <div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:14px">Earn $20K–60K/month</div>
+        <a href="mailto:info@profithackai.com?subject=Done For You Empire Enquiry" style="display:block;padding:12px 24px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:7px;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;transition:all 0.2s">APPLY NOW →</a>
+        <div class="paypal-lock" style="margin-top:8px">📧 Direct application</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<hr style="border:none;border-top:1px solid #1A1A1A">
+
+<!-- FAQ -->
+<div class="faq-section">
+  <div class="wrap">
+    <div class="sec-eye">// QUESTIONS</div>
+    <h2 class="sec-title">QUICK ANSWERS.</h2>
+
+    <div class="faq">
+      <div class="faq-q">What exactly is an AI Influencer?<span class="arr">+</span></div>
+      <div class="faq-a">An AI Influencer is a fully digital creator — like HeyGen avatars but built for social media and monetisation platforms. You pick a model from our library (CEO, fitness coach, lifestyle, entertainment, and more), give it a name and personality, and our software generates all content automatically. The creator posts, responds to fans, and earns money while you sleep. You own the creator. We run the engine.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-q">What's the difference between Starter and Pro?<span class="arr">+</span></div>
+      <div class="faq-a">Starter is your entry point — you get access to our basic model library, 3 videos a day or 15 seconds daily, TikTok and Instagram posting. It's enough to start building an audience and see real results. Pro unlocks the full model library, 1 dedicated AI creator profile, the Fanvue and adult content pipeline, unlimited posts across all 13 platforms, voice cloning, video generation, AI DMs, and priority support. Pro is where the serious money starts.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-q">Do I need any tech skills?<span class="arr">+</span></div>
+      <div class="faq-a">None. You pick a model, give it a name, answer a few questions about personality and niche, and we handle everything from there. Content is generated, scheduled, and posted automatically. DMs are handled automatically. Reports come to your inbox. If you can use a smartphone, you can run AI Influencer Studio.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-q">Is this legal? Am I liable for what my creator posts?<span class="arr">+</span></div>
+      <div class="faq-a">AI Influencer Studio is a software tool — the same model as Adobe selling Photoshop. We provide the tools; you are responsible for how you use them. All users must be 18+, agree to our Terms of Service, and comply with the rules of the platforms they post to. Adult content features require additional ID verification. Dollar Double Marketing does not produce, host, or distribute content directly.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-q">What if I cancel — do I lose my creator?<span class="arr">+</span></div>
+      <div class="faq-a">You get a 7-day grace period after a missed payment. Your creator keeps running normally. After 7 days, the creator suspends — no posting, but all data is saved. Within 30 days you can reactivate and everything comes back instantly. After 30 days without payment, creators are permanently deleted. Cancel any time — no fees. You keep all content produced during your subscription.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL CTA -->
+<div class="final">
+  <div class="wrap">
+    <h2>START WITH ONE.<br>SCALE TO <em>EMPIRE.</em></h2>
+    <p>Your competitor is building their AI creator right now. Get in first, lock in founding member pricing, and let the system do the work.</p>
+    <div class="email-row">
+      <input type="email" placeholder="Your email address">
+      <button class="btn-main">CLAIM MY SPOT →</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Free 15-min call included · No commitment · See your creator before you pay</div>
+    <div style="font-size:13px;color:var(--red);font-weight:600">⚡ 67 founding spots remaining · Price doubles at launch</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div>© 2026 Dollar Double Marketing · AI Profit Hustle + Digital King · aigrowthhq.com · nvme.live · glowx.live</div>
+  <div style="margin-top:6px">Must be 18+ · ID verification required for adult features · Results not guaranteed · Dollar Double Marketing provides software tools only · <a href="mailto:info@profithackai.com" style="color:#444;text-decoration:none">info@profithackai.com</a></div>
+</div>
+
+<style>
+@media(max-width:600px){
+  .enterprise,.dfy-grid{grid-template-columns:1fr !important}
+  .topbar-right .topbar-link{display:none}
+}
+</style>
+
+<script>
+// COUNTDOWN
+const end = new Date(Date.now() + 14*24*60*60*1000);
+function tick(){
+  const d = end - Date.now();
+  if(d<=0) return;
+  document.getElementById('dd').textContent = String(Math.floor(d/86400000)).padStart(2,'0');
+  document.getElementById('hh').textContent = String(Math.floor((d%86400000)/3600000)).padStart(2,'0');
+  document.getElementById('mm').textContent = String(Math.floor((d%3600000)/60000)).padStart(2,'0');
+  document.getElementById('ss').textContent = String(Math.floor((d%60000)/1000)).padStart(2,'0');
+}
+tick(); setInterval(tick, 1000);
+
+// FAQ
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => {
+    const f = q.parentElement;
+    const open = f.classList.contains('open');
+    document.querySelectorAll('.faq').forEach(x => x.classList.remove('open'));
+    if(!open) f.classList.add('open');
+  });
+});
+
+// EMAIL CTA
+document.querySelector('.btn-main').addEventListener('click', () => {
+  const email = document.querySelector('.email-row input').value;
+  if(email && email.includes('@')){
+    window.location.href = `mailto:info@profithackai.com?subject=Founding Member Spot&body=Email: ${email}`;
+  } else {
+    document.querySelector('.email-row input').style.borderColor = '#FF4444';
+    setTimeout(() => document.querySelector('.email-row input').style.borderColor = '', 2000);
+  }
+});
+</script>
+</body>
+</html>
