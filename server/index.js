@@ -29,6 +29,9 @@ app.use('/api/admin',     safeRoute('./routes/admin'));
 app.use('/api/affiliate', safeRoute('./routes/affiliate'));
 app.use('/api/creators',  safeRoute('./routes/creators'));
 app.use('/api/marketing', safeRoute('./routes/marketing'));
+app.use('/api/auth',     safeRoute('./routes/auth'));
+app.use('/api/tokens',   safeRoute('./routes/tokens'));
+app.use('/api/generate', safeRoute('./routes/generate'));
 
 // ── LOCAL STORAGE ──────────────────────────────────────────────
 try {
@@ -41,7 +44,7 @@ app.get('/api/health', async (req, res) => {
   res.json({
     status: 'live',
     time:   new Date().toISOString(),
-    routes: ['tools','pipeline','admin','affiliate','creators','marketing'],
+    routes: ['tools','pipeline','admin','affiliate','creators','marketing','auth','tokens','generate'],
     env: {
       replicate:  !!process.env.REPLICATE_API_TOKEN,
       openrouter: !!process.env.OPENROUTER_API_KEY,
@@ -56,6 +59,92 @@ app.get('/api/health', async (req, res) => {
 
 // ── STATIC HTML ────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../public')));
+
+// ── ENHANCED STATIC FILE SERVING FOR RAILWAY ──────────────────────
+console.log('Public directory paths:');
+console.log('  __dirname:', __dirname);
+console.log('  process.cwd():', process.cwd());
+console.log('  Standard public path:', path.join(__dirname, '../public'));
+console.log('  Alternative path:', path.join(process.cwd(), 'public'));
+
+// Try multiple static directories for Railway compatibility
+app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
+app.use(express.static(path.join(__dirname, '../../public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
+
+// Explicit routes for critical HTML files
+const htmlFiles = [
+  'test_zara_all.html',
+  'zara_diagnostic.html',
+  'pricing.html',
+  'marketing-hub.html',
+  'marketing-dashboard.html',
+  'index.html'
+];
+
+htmlFiles.forEach(file => {
+  app.get(`/${file}`, (req, res) => {
+    const paths = [
+      path.join(__dirname, '../public', file),
+      path.join(process.cwd(), 'public', file),
+      path.join(__dirname, '../../public', file),
+      path.join(process.cwd(), 'public', file)
+    ];
+    
+    for (const filePath of paths) {
+      if (fs.existsSync(filePath)) {
+        console.log(`Serving ${file} from: ${filePath}`);
+        return res.sendFile(filePath);
+      }
+    }
+    
+    console.error(`File not found: ${file}`);
+    res.status(404).json({ error: `File ${file} not found`, triedPaths: paths });
+  });
+});
+
+// Catch-all for static files
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) return next();
+  
+  const filePath = req.path === '/' ? 'index.html' : req.path.replace(/^\//, '');
+  
+  const paths = [
+    path.join(__dirname, '../public', filePath),
+    path.join(process.cwd(), 'public', filePath),
+    path.join(__dirname, '../../public', filePath),
+    path.join(process.cwd(), 'public', filePath)
+  ];
+  
+  for (const fullPath of paths) {
+    if (fs.existsSync(fullPath)) {
+      console.log(`Catch-all serving: ${filePath} from: ${fullPath}`);
+      return res.sendFile(fullPath);
+    }
+  }
+  
+  // If not found, try with .html extension
+  if (!filePath.includes('.')) {
+    const htmlPath = filePath + '.html';
+    const htmlPaths = [
+      path.join(__dirname, '../public', htmlPath),
+      path.join(process.cwd(), 'public', htmlPath),
+      path.join(__dirname, '../../public', htmlPath),
+      path.join(process.cwd(), 'public', htmlPath)
+    ];
+    
+    for (const fullPath of htmlPaths) {
+      if (fs.existsSync(fullPath)) {
+        console.log(`Catch-all serving with .html: ${htmlPath} from: ${fullPath}`);
+        return res.sendFile(fullPath);
+      }
+    }
+  }
+  
+  next(); // Let default error handler handle it
+});
 app.get('/', (req, res) => {
   const idx = path.join(__dirname, '../public/index.html');
   if (fs.existsSync(idx)) return res.sendFile(idx);
