@@ -155,3 +155,4 @@ router.post('/change-password', authRequired, async (req, res) => {
 
 module.exports = router;
 module.exports.pool = pool;
+module.exports.authRequired = authRequired;
