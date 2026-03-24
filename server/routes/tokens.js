@@ -1,5 +1,6 @@
+
 const router = require('express').Router();
-const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
+const axios  = require('axios');
 const { Pool } = require('pg');
 const { authRequired } = require('./auth');
 
@@ -9,26 +10,45 @@ const pool = new Pool({
   max: 5,
 });
 
-// ── CREDIT PACKS ───────────────────────────────────────────────
+const APP_URL = process.env.APP_URL || 'https://ai-influencer-studio-production.up.railway.app';
+const PAYPAL_API = process.env.PAYPAL_ENV === 'live'
+  ? 'https://api-m.paypal.com'
+  : 'https://api-m.sandbox.paypal.com';
+
+// ── Credit Packs ─────────────────────────────────
 const CREDIT_PACKS = [
-  { id: 'pack_500',   name: 'Starter Pack',  credits: 500,   price: 900,  description: '500 credits — great for testing' },
-  { id: 'pack_2000',  name: 'Creator Pack',  credits: 2000,  price: 2300, description: '2,000 credits — best value ⭐' },
-  { id: 'pack_10000', name: 'Agency Pack',   credits: 10000, price: 5800, description: '10,000 credits — agency scale' },
+  { id: 'pack_500',   name: 'Starter Pack',  credits: 500,   price: '9.00',  description: '500 credits — great for testing' },
+  { id: 'pack_2000',  name: 'Creator Pack',  credits: 2000,  price: '23.00', description: '2,000 credits — best value ⭐' },
+  { id: 'pack_10000', name: 'Agency Pack',   credits: 10000, price: '58.00', description: '10,000 credits — agency scale' },
 ];
 
-// ── SUBSCRIPTION PLANS ─────────────────────────────────────────
 const PLANS = [
-  { id: 'starter', name: 'Starter',  credits: 500,  price: 4700,  interval: 'month' },
-  { id: 'pro',     name: 'Pro',      credits: 1000, price: 14700, interval: 'month' },
-  { id: 'agency',  name: 'Agency',   credits: 5000, price: 44700, interval: 'month' },
+  { id: 'starter', name: 'Starter', credits: 500,  price: '47.00',  interval: 'month' },
+  { id: 'pro',     name: 'Pro',     credits: 1000, price: '147.00', interval: 'month' },
+  { id: 'agency',  name: 'Agency',  credits: 5000, price: '447.00', interval: 'month' },
 ];
 
-// ── LIST PACKS ─────────────────────────────────────────────────
+// ── PayPal Auth ───────────────────────────────────
+async function getPayPalToken() {
+  const cid = process.env.PAYPAL_CLIENT_ID;
+  const sec = process.env.PAYPAL_SECRET;
+  if (!cid || !sec) throw new Error('PayPal credentials not configured');
+
+  const res = await axios.post(
+    `${PAYPAL_API}/v1/oauth2/token`,
+    'grant_type=client_credentials',
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      auth: { username: cid, password: sec } }
+  );
+  return res.data.access_token;
+}
+
+// ── List Packs ────────────────────────────────────
 router.get('/packs', (req, res) => {
   res.json({ ok: true, packs: CREDIT_PACKS, plans: PLANS });
 });
 
-// ── GET USER CREDITS ───────────────────────────────────────────
+// ── User Credit Balance ───────────────────────────
 router.get('/balance', authRequired, async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -40,138 +60,120 @@ router.get('/balance', authRequired, async (req, res) => {
   }
 });
 
-// ── CREATE CHECKOUT SESSION ────────────────────────────────────
+// ── Create PayPal Order (one-time pack purchase) ──
 router.post('/checkout', authRequired, async (req, res) => {
-  if (!stripe) return res.status(503).json({ error: 'Payments not configured — set STRIPE_SECRET_KEY' });
   try {
-    const { pack_id, success_url, cancel_url } = req.body;
+    const { pack_id } = req.body;
     const pack = CREDIT_PACKS.find(p => p.id === pack_id);
     if (!pack) return res.status(400).json({ error: 'Invalid pack ID' });
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      customer_email: req.user.email,
-      payment_method_types: ['card'],
-      payment_method_options: {
-        card: { installments: { enabled: true } },
-      },
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: { name: pack.name, description: pack.description },
-          unit_amount: pack.price,
-        },
-        quantity: 1,
+    const token = await getPayPalToken();
+    const order = await axios.post(`${PAYPAL_API}/v2/checkout/orders`, {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        amount: { currency_code: 'USD', value: pack.price },
+        description: `AI Influencer Studio — ${pack.name} (${pack.credits} credits)`,
+        custom_id: `${req.user.id}:${pack.credits}:${pack_id}`,
       }],
-      metadata: { user_id: String(req.user.id), credits: String(pack.credits), pack_id },
-      success_url: success_url || `${process.env.APP_URL || 'https://ai-influencer-studio-production.up.railway.app'}/?payment=success`,
-      cancel_url:  cancel_url  || `${process.env.APP_URL || 'https://ai-influencer-studio-production.up.railway.app'}/?payment=cancelled`,
-    });
+      application_context: {
+        brand_name: 'AI Influencer Studio',
+        return_url: `${APP_URL}/payment-success`,
+        cancel_url:  `${APP_URL}/payment-cancelled`,
+        user_action: 'PAY_NOW',
+      },
+    }, { headers: { Authorization: `Bearer ${token}` } });
 
-    res.json({ ok: true, checkout_url: session.url, session_id: session.id });
+    const approvalUrl = order.data.links.find(l => l.rel === 'approve')?.href;
+    res.json({ ok: true, order_id: order.data.id, approval_url: approvalUrl, pack });
   } catch(e) {
-    console.error('[TOKENS] checkout error:', e.message);
-    res.status(500).json({ error: e.message });
+    console.error('[TOKENS] checkout error:', e.response?.data || e.message);
+    res.status(500).json({ error: e.response?.data?.message || e.message });
   }
 });
 
-// ── SUBSCRIBE TO PLAN ──────────────────────────────────────────
-router.post('/subscribe', authRequired, async (req, res) => {
-  if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
+// ── Capture PayPal Order (called after user approves) ──
+router.post('/capture', authRequired, async (req, res) => {
   try {
-    const { plan_id, success_url, cancel_url } = req.body;
+    const { order_id } = req.body;
+    if (!order_id) return res.status(400).json({ error: 'order_id required' });
+
+    const token = await getPayPalToken();
+
+    // Get order details to extract metadata
+    const details = await axios.get(`${PAYPAL_API}/v2/checkout/orders/${order_id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const customId = details.data.purchase_units[0]?.custom_id || '';
+    const [userId, credits] = customId.split(':');
+
+    // Capture the payment
+    const capture = await axios.post(
+      `${PAYPAL_API}/v2/checkout/orders/${order_id}/capture`, {},
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+    );
+
+    if (capture.data.status === 'COMPLETED') {
+      const uid  = parseInt(userId) || req.user.id;
+      const cred = parseInt(credits) || 0;
+      if (cred > 0) {
+        await pool.query(
+          'UPDATE users SET credits = credits + $1, updated_at = NOW() WHERE id = $2',
+          [cred, uid]
+        );
+        console.log(`[PAYPAL] +${cred} credits → user ${uid}`);
+      }
+      res.json({ ok: true, status: 'COMPLETED', credits_added: cred, order_id });
+    } else {
+      res.status(400).json({ error: 'Payment not completed', status: capture.data.status });
+    }
+  } catch(e) {
+    console.error('[TOKENS] capture error:', e.response?.data || e.message);
+    res.status(500).json({ error: e.response?.data?.message || e.message });
+  }
+});
+
+// ── Subscribe to Plan (PayPal Subscription) ───────
+router.post('/subscribe', authRequired, async (req, res) => {
+  try {
+    const { plan_id } = req.body;
     const plan = PLANS.find(p => p.id === plan_id);
     if (!plan) return res.status(400).json({ error: 'Invalid plan' });
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer_email: req.user.email,
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: { name: `AI Studio ${plan.name}` },
-          unit_amount: plan.price,
-          recurring: { interval: 'month' },
-        },
-        quantity: 1,
+    // For subscriptions, use one-time order with plan metadata
+    // (Full PayPal Billing Plans require pre-created plan IDs in PayPal dashboard)
+    const token = await getPayPalToken();
+    const order = await axios.post(`${PAYPAL_API}/v2/checkout/orders`, {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        amount: { currency_code: 'USD', value: plan.price },
+        description: `AI Influencer Studio — ${plan.name} Plan (${plan.credits} credits/mo)`,
+        custom_id: `${req.user.id}:${plan.credits}:${plan_id}`,
       }],
-      metadata: { user_id: String(req.user.id), plan_id, credits: String(plan.credits) },
-      success_url: success_url || `${process.env.APP_URL || 'https://ai-influencer-studio-production.up.railway.app'}/?subscribed=true`,
-      cancel_url:  cancel_url  || `${process.env.APP_URL || 'https://ai-influencer-studio-production.up.railway.app'}/?payment=cancelled`,
-    });
+      application_context: {
+        brand_name: 'AI Influencer Studio',
+        return_url: `${APP_URL}/subscribed`,
+        cancel_url:  `${APP_URL}/payment-cancelled`,
+        user_action: 'SUBSCRIBE_NOW',
+      },
+    }, { headers: { Authorization: `Bearer ${token}` } });
 
-    res.json({ ok: true, checkout_url: session.url });
+    const approvalUrl = order.data.links.find(l => l.rel === 'approve')?.href;
+    res.json({ ok: true, order_id: order.data.id, approval_url: approvalUrl, plan });
   } catch(e) {
-    res.status(500).json({ error: e.message });
+    console.error('[TOKENS] subscribe error:', e.response?.data || e.message);
+    res.status(500).json({ error: e.response?.data?.message || e.message });
   }
 });
 
-// ── STRIPE WEBHOOK ─────────────────────────────────────────────
-router.post('/webhook', require('express').raw({ type: 'application/json' }), async (req, res) => {
-  if (!stripe) return res.status(503).json({ error: 'Stripe not configured' });
-  const sig = req.headers['stripe-signature'];
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch(e) {
-    console.error('[WEBHOOK] signature error:', e.message);
-    return res.status(400).json({ error: 'Webhook signature invalid' });
-  }
-
-  try {
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      const userId  = parseInt(session.metadata?.user_id);
-      const credits  = parseInt(session.metadata?.credits || 0);
-      const planId   = session.metadata?.plan_id;
-
-      if (userId && credits > 0) {
-        await pool.query(
-          'UPDATE users SET credits = credits + $1, updated_at = NOW() WHERE id = $2',
-          [credits, userId]
-        );
-        console.log(`[WEBHOOK] +${credits} credits → user ${userId}`);
-      }
-      if (planId) {
-        await pool.query(
-          'UPDATE users SET plan = $1, updated_at = NOW() WHERE id = $2',
-          [planId, userId]
-        );
-        console.log(`[WEBHOOK] plan → ${planId} for user ${userId}`);
-      }
-    }
-
-    if (event.type === 'invoice.payment_succeeded') {
-      const invoice = event.data.object;
-      const custId  = invoice.customer;
-      const { rows } = await pool.query('SELECT id, plan FROM users WHERE stripe_customer=$1', [custId]);
-      if (rows.length) {
-        const plan = PLANS.find(p => p.id === rows[0].plan);
-        if (plan) {
-          await pool.query(
-            'UPDATE users SET credits = credits + $1, updated_at = NOW() WHERE id = $2',
-            [plan.credits, rows[0].id]
-          );
-          console.log(`[WEBHOOK] Monthly renewal +${plan.credits} → user ${rows[0].id}`);
-        }
-      }
-    }
-
-    res.json({ received: true });
-  } catch(e) {
-    console.error('[WEBHOOK] processing error:', e.message);
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ── ADMIN: MANUALLY ADD CREDITS ────────────────────────────────
+// ── Admin: Manually Add Credits ───────────────────
 router.post('/admin/add-credits', authRequired, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
   const { user_id, credits } = req.body;
   try {
-    await pool.query('UPDATE users SET credits = credits + $1 WHERE id = $2', [credits, user_id]);
-    res.json({ ok: true, added: credits });
+    await pool.query(
+      'UPDATE users SET credits = credits + $1 WHERE id = $2', [credits, user_id]
+    );
+    res.json({ ok: true, added: credits, user_id });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }

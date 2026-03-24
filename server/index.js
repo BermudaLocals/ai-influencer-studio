@@ -49,7 +49,7 @@ app.get('/api/health', async (req, res) => {
       replicate:  !!process.env.REPLICATE_API_TOKEN,
       openrouter: !!process.env.OPENROUTER_API_KEY,
       elevenlabs: !!process.env.ELEVENLABS_API_KEY,
-      stripe:     !!process.env.STRIPE_SECRET_KEY,
+      paypal:     !!process.env.PAYPAL_CLIENT_ID,
       database:   !!process.env.DATABASE_URL,
       tiktok:     !!process.env.TIKTOK_ACCESS_TOKEN,
       instagram:  !!process.env.FB_ACCESS_TOKEN,
