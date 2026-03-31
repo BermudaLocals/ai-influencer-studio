@@ -32,6 +32,7 @@ app.use('/api/marketing', safeRoute('./routes/marketing'));
 app.use('/api/auth',     safeRoute('./routes/auth'));
 app.use('/api/tokens',   safeRoute('./routes/tokens'));
 app.use('/api/generate', safeRoute('./routes/generate'));
+app.use('/api/claude',   safeRoute('./routes/claude'));
 
 // ── LOCAL STORAGE ──────────────────────────────────────────────
 try {

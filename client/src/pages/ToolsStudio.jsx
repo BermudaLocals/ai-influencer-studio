@@ -1,681 +1,607 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
-const TOOLS = [
-  { id: "faceswap", icon: "🎭", label: "Face Swap", desc: "Swap faces between images instantly", badge: "HOT" },
-  { id: "remove-bg", icon: "✂️", label: "Remove BG", desc: "Remove background with AI precision", badge: null },
-  { id: "upscale", icon: "🔭", label: "Upscale 4x", desc: "Enhance resolution up to 4x with Real-ESRGAN", badge: null },
-  { id: "enhance-face", icon: "✨", label: "Face Enhance", desc: "Restore and enhance facial details", badge: null },
-  { id: "inpaint", icon: "🖌️", label: "Inpaint", desc: "Edit specific regions with AI", badge: "NEW" },
-  { id: "pose", icon: "🕺", label: "Pose Control", desc: "Generate images matching a pose", badge: null },
-  { id: "style-transfer", icon: "🎨", label: "Style Transfer", desc: "Apply any style to your images", badge: null },
-  { id: "bulk", icon: "⚡", label: "Bulk Generate", desc: "Generate 10+ images at once", badge: "NEW" },
-  { id: "variations", icon: "🔀", label: "Variations", desc: "Create 6 variations from one prompt", badge: null },
-  { id: "models", icon: "🤖", label: "Model Gallery", desc: "Browse all available AI models", badge: null },
+const PLANS = [
+  {
+    id: "starter", name: "Starter", price: 97, period: "/mo",
+    tag: "SFW ONLY", tagColor: "#3B8BFF",
+    earn: "Perfect for mainstream creators & businesses",
+    features: ["SFW avatars only","Lifestyle / fitness / food / fashion niches","10 UGC videos/mo","5 ad scripts/mo","Basic analytics","Email support"],
+    cost: "YOUR COST: ~$2/mo | MARGIN: 97%",
+    adult: false, color: "#3B8BFF"
+  },
+  {
+    id: "fanvue_pro", name: "Fanvue Pro", price: 197, period: "/mo",
+    tag: "MOST POPULAR", tagColor: "#C9A84C",
+    earn: "Clients earn $3,000–5,000/mo. No one cancels this.",
+    features: ["Adult avatar unlock (18+ verified)","Full Fanvue pipeline automated","AI DM system included","Unlimited UGC videos","Daily content + scheduling","Whale relationship management","Priority support"],
+    cost: "YOUR COST: ~$8/mo | MARGIN: 96%",
+    adult: true, color: "#C9A84C", hero: true
+  },
+  {
+    id: "empire", name: "Fanvue Empire", price: 497, period: "/mo",
+    tag: "10 CREATORS", tagColor: "#00D46A",
+    earn: "Run an entire agency from one dashboard",
+    features: ["Everything in Fanvue Pro","10 AI creator personas","Cross-platform posting","Brand deal marketplace","Revenue split tracking","Dedicated account manager","Monthly strategy call"],
+    cost: "YOUR COST: ~$25/mo | MARGIN: 95%",
+    adult: true, color: "#00D46A"
+  },
+  {
+    id: "dfy", name: "Done For You", price: 2500, period: " setup",
+    tag: "FULL SERVICE", tagColor: "#8B5CF6",
+    earn: "We build everything. You collect revenue.",
+    features: ["Complete setup & configuration","All creators built for you","30-day managed launch","$997/mo ongoing management","Brand deal negotiation","Weekly performance reports","Revenue split available"],
+    cost: "ONGOING: $997/mo | YOUR MARGIN: $2,420 setup + $917/mo",
+    adult: true, color: "#8B5CF6"
+  }
 ];
 
-const MODELS_LIST = [
-  { id: "flux-pro", name: "FLUX Pro", category: "Premium", rating: 4.9, badge: "BEST", color: "#FF00FF" },
-  { id: "realvisxl", name: "RealVisXL", category: "Photorealistic", rating: 4.9, badge: "TOP", color: "#00F2EA" },
-  { id: "sdxl", name: "Stable Diffusion XL", category: "Photorealistic", rating: 4.8, badge: null, color: "#FF4500" },
-  { id: "flux-schnell", name: "FLUX Schnell", category: "Fast", rating: 4.6, badge: "FAST", color: "#FFD700" },
-  { id: "epicrealism", name: "epiCRealism", category: "Cinematic", rating: 4.7, badge: null, color: "#9B59B6" },
-  { id: "dreamshaper", name: "DreamShaper XL", category: "Artistic", rating: 4.4, badge: null, color: "#2ECC71" },
-  { id: "animagine", name: "Animagine XL", category: "Anime", rating: 4.5, badge: null, color: "#E74C3C" },
-  { id: "pollinations", name: "Pollinations FREE", category: "Free", rating: 4.2, badge: "FREE", color: "#00F2EA" },
+const UGC_PRICES = [
+  { name: "Single UGC video (15–30 sec)", price: "$97", cost: "~$2", margin: "95%" },
+  { name: "UGC pack — 5 videos", price: "$397", cost: "~$8", margin: "98%" },
+  { name: "UGC pack — 10 videos", price: "$697", cost: "~$15", margin: "98%" },
+  { name: "Ad video — 30 sec", price: "$297", cost: "~$5", margin: "98%" },
+  { name: "Ad video — 60 sec", price: "$497", cost: "~$8", margin: "99%" },
+  { name: "3 ad variations (A/B/C)", price: "$797", cost: "~$12", margin: "98%" },
+  { name: "Monthly UGC retainer (8 videos)", price: "$597/mo", cost: "~$25/mo", margin: "96%" },
+  { name: "Monthly ad retainer (4 ads)", price: "$997/mo", cost: "~$30/mo", margin: "97%" },
 ];
 
-function DropZone({ label, onFile, accept = "image/*", preview, icon = "📁" }) {
-  const ref = useRef();
-  const [drag, setDrag] = useState(false);
+const NICHES = ["Lifestyle","Fitness","Food","Fashion","Tech","Finance","Gaming","Travel","Beauty","Music"];
+const AD_STYLES = ["TikTok Hook","Instagram Reel","YouTube Pre-roll","Facebook Ad","UGC Authentic","Before/After","Testimonial","POV Style"];
+const DURATIONS = ["15 seconds","30 seconds","60 seconds","90 seconds"];
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    setDrag(false);
-    const file = e.dataTransfer.files[0];
-    if (file) onFile(file);
-  }, [onFile]);
+const CLAUDE_MODEL = "claude-sonnet-4-6";
 
-  return (
-    <div
-      onClick={() => ref.current.click()}
-      onDrop={handleDrop}
-      onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-      onDragLeave={() => setDrag(false)}
-      style={{
-        border: `2px dashed ${drag ? "#FF00FF" : "#333"}`,
-        borderRadius: 12,
-        padding: 20,
-        textAlign: "center",
-        cursor: "pointer",
-        background: drag ? "rgba(255,0,255,0.05)" : "rgba(255,255,255,0.02)",
-        transition: "all 0.2s",
-        minHeight: 120,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-      }}
-    >
-      <input ref={ref} type="file" accept={accept} style={{ display: "none" }}
-        onChange={(e) => e.target.files[0] && onFile(e.target.files[0])} />
-      {preview ? (
-        <img src={preview} alt="preview" style={{ maxHeight: 100, maxWidth: "100%", borderRadius: 8 }} />
-      ) : (
-        <>
-          <span style={{ fontSize: 28 }}>{icon}</span>
-          <span style={{ color: "#888", fontSize: 13 }}>{label}</span>
-        </>
-      )}
-    </div>
-  );
-}
-
-function StatusBar({ status, progress }) {
-  if (!status) return null;
-  const colors = { processing: "#FF00FF", success: "#00F2EA", error: "#FF4500" };
-  return (
-    <div style={{
-      background: `rgba(${status === "success" ? "0,242,234" : status === "error" ? "255,69,0" : "255,0,255"},0.1)`,
-      border: `1px solid ${colors[status]}`,
-      borderRadius: 8, padding: "10px 16px",
-      color: colors[status], fontSize: 14, marginTop: 12,
-      display: "flex", alignItems: "center", gap: 10
-    }}>
-      {status === "processing" && (
-        <div style={{
-          width: 14, height: 14, borderRadius: "50%",
-          border: "2px solid #FF00FF", borderTopColor: "transparent",
-          animation: "spin 0.8s linear infinite"
-        }} />
-      )}
-      {status === "processing" ? `Processing${progress ? ` (${progress})` : "..."}` :
-       status === "success" ? "✅ Complete!" :
-       `❌ Error: ${progress}`}
-    </div>
-  );
-}
-
-function ResultImage({ url, label }) {
-  if (!url) return null;
-  return (
-    <div style={{ marginTop: 16 }}>
-      <div style={{ color: "#888", fontSize: 12, marginBottom: 8 }}>{label || "Result"}</div>
-      <img src={url} alt="result" style={{ width: "100%", borderRadius: 10, border: "1px solid #222" }} />
-      <a href={url} download style={{
-        display: "block", marginTop: 8, textAlign: "center",
-        background: "linear-gradient(135deg, #FF00FF, #00F2EA)",
-        color: "#000", fontWeight: 700, borderRadius: 8,
-        padding: "8px 0", fontSize: 13, textDecoration: "none"
-      }}>⬇ Download</a>
-    </div>
-  );
-}
-
-// ── Tool Panels ──────────────────────────────────────────────────
-
-function FaceSwapPanel({ token }) {
-  const [sourceFile, setSourceFile] = useState(null);
-  const [targetFile, setTargetFile] = useState(null);
-  const [sourcePreview, setSourcePreview] = useState(null);
-  const [targetPreview, setTargetPreview] = useState(null);
-  const [status, setStatus] = useState(null);
-  const [result, setResult] = useState(null);
-  const [msg, setMsg] = useState("");
-
-  const setFile = (setter, previewSetter) => (file) => {
-    setter(file);
-    const reader = new FileReader();
-    reader.onload = (e) => previewSetter(e.target.result);
-    reader.readAsDataURL(file);
-  };
-
-  const run = async () => {
-    if (!sourceFile || !targetFile) return setMsg("Upload both images");
-    setStatus("processing"); setResult(null); setMsg("");
-    try {
-      const fd = new FormData();
-      fd.append("source", sourceFile);
-      fd.append("target", targetFile);
-      const res = await fetch("/api/tools/faceswap", {
-        method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
-      });
-      const data = await res.json();
-      if (data.url) { setResult(data.url); setStatus("success"); }
-      else throw new Error(data.error);
-    } catch (e) { setStatus("error"); setMsg(e.message); }
-  };
-
-  return (
-    <div>
-      <div style={{ color: "#aaa", fontSize: 13, marginBottom: 16 }}>
-        Upload a <b style={{ color: "#FF00FF" }}>face image</b> and a <b style={{ color: "#00F2EA" }}>target scene</b> — AI swaps the face seamlessly.
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <DropZone label="Drop FACE image here" onFile={setFile(setSourceFile, setSourcePreview)} preview={sourcePreview} icon="🧑" />
-        <DropZone label="Drop TARGET image here" onFile={setFile(setTargetFile, setTargetPreview)} preview={targetPreview} icon="🖼️" />
-      </div>
-      {msg && <div style={{ color: "#FF4500", fontSize: 13, marginTop: 8 }}>{msg}</div>}
-      <button onClick={run} style={btnStyle}>🎭 Swap Face</button>
-      <StatusBar status={status} progress={msg} />
-      <ResultImage url={result} label="Face Swapped Result" />
-    </div>
-  );
-}
-
-function RemoveBgPanel({ token }) {
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [status, setStatus] = useState(null);
-  const [result, setResult] = useState(null);
-  const [msg, setMsg] = useState("");
-
-  const handleFile = (f) => {
-    setFile(f);
-    const r = new FileReader();
-    r.onload = (e) => setPreview(e.target.result);
-    r.readAsDataURL(f);
-  };
-
-  const run = async () => {
-    if (!file) return;
-    setStatus("processing"); setResult(null); setMsg("");
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const res = await fetch("/api/tools/remove-bg", {
-        method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
-      });
-      if (!res.ok) throw new Error("Processing failed");
-      const blob = await res.blob();
-      setResult(URL.createObjectURL(blob));
-      setStatus("success");
-    } catch (e) { setStatus("error"); setMsg(e.message); }
-  };
-
-  return (
-    <div>
-      <div style={{ color: "#aaa", fontSize: 13, marginBottom: 16 }}>
-        Remove image background instantly. Perfect for product shots, creator portraits, and compositing.
-      </div>
-      <DropZone label="Drop image here to remove background" onFile={handleFile} preview={preview} />
-      <button onClick={run} style={btnStyle} disabled={!file}>✂️ Remove Background</button>
-      <StatusBar status={status} progress={msg} />
-      <ResultImage url={result} label="Background Removed" />
-    </div>
-  );
-}
-
-function UpscalePanel({ token }) {
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [scale, setScale] = useState(4);
-  const [status, setStatus] = useState(null);
-  const [result, setResult] = useState(null);
-  const [msg, setMsg] = useState("");
-  const [mode, setMode] = useState("upscale");
-
-  const handleFile = (f) => {
-    setFile(f);
-    const r = new FileReader();
-    r.onload = (e) => setPreview(e.target.result);
-    r.readAsDataURL(f);
-  };
-
-  const run = async () => {
-    if (!file) return;
-    setStatus("processing"); setResult(null); setMsg("");
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      fd.append("scale", scale);
-      const endpoint = mode === "face" ? "/api/tools/enhance-face" : "/api/tools/upscale";
-      const res = await fetch(endpoint, {
-        method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
-      });
-      if (!res.ok) throw new Error("Processing failed");
-      const blob = await res.blob();
-      setResult(URL.createObjectURL(blob));
-      setStatus("success");
-    } catch (e) { setStatus("error"); setMsg(e.message); }
-  };
-
-  return (
-    <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        {[["upscale", "🔭 Upscale Image"], ["face", "✨ Face Enhance"]].map(([id, label]) => (
-          <button key={id} onClick={() => setMode(id)} style={{
-            ...tabBtnStyle, background: mode === id ? "linear-gradient(135deg,#FF00FF,#00F2EA)" : "transparent",
-            color: mode === id ? "#000" : "#888"
-          }}>{label}</button>
-        ))}
-      </div>
-      {mode === "upscale" && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          {[2, 4].map(s => (
-            <button key={s} onClick={() => setScale(s)} style={{
-              ...scaleBtn, border: scale === s ? "1px solid #FF00FF" : "1px solid #333",
-              color: scale === s ? "#FF00FF" : "#888"
-            }}>{s}x</button>
-          ))}
-        </div>
-      )}
-      <DropZone label="Drop image to enhance" onFile={handleFile} preview={preview} />
-      <button onClick={run} style={btnStyle} disabled={!file}>
-        {mode === "face" ? "✨ Enhance Face" : `🔭 Upscale ${scale}x`}
-      </button>
-      <StatusBar status={status} progress={msg} />
-      <ResultImage url={result} label="Enhanced Result" />
-    </div>
-  );
-}
-
-function BulkPanel({ token }) {
-  const [prompts, setPrompts] = useState("A beautiful AI influencer in Paris, golden hour\nFashion shoot, luxury lifestyle, NYC rooftop\nFitness content, sunrise beach workout\nBeauty tutorial setup, ring light, glamorous");
-  const [status, setStatus] = useState(null);
-  const [results, setResults] = useState([]);
-  const [progress, setProgress] = useState("");
-
-  const run = async () => {
-    const lines = prompts.split("\n").filter(p => p.trim());
-    if (!lines.length) return;
-    setStatus("processing"); setResults([]); setProgress(`0/${lines.length}`);
-    try {
-      const res = await fetch("/api/tools/bulk-generate", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prompts: lines.map(p => ({ prompt: p })), concurrency: 3 })
-      });
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        chunk.split("\n").filter(l => l.startsWith("data:")).forEach(line => {
-          try {
-            const data = JSON.parse(line.slice(5));
-            if (data.done) { setStatus("success"); setProgress(`${data.succeeded}/${data.total} generated`); }
-            else if (data.result) { setResults(r => [...r, data.result]); setProgress(`${data.completed}/${lines.length}`); }
-          } catch {}
-        });
-      }
-    } catch (e) { setStatus("error"); setProgress(e.message); }
-  };
-
-  return (
-    <div>
-      <div style={{ color: "#aaa", fontSize: 13, marginBottom: 12 }}>
-        Enter one prompt per line. All images generated in parallel.
-      </div>
-      <textarea
-        value={prompts}
-        onChange={e => setPrompts(e.target.value)}
-        rows={6}
-        style={{
-          width: "100%", background: "#111", border: "1px solid #333",
-          borderRadius: 8, padding: 12, color: "#fff", fontSize: 13,
-          resize: "vertical", boxSizing: "border-box"
-        }}
-        placeholder="One prompt per line..."
-      />
-      <div style={{ color: "#555", fontSize: 12, marginTop: 4 }}>
-        {prompts.split("\n").filter(p => p.trim()).length} prompts
-      </div>
-      <button onClick={run} style={btnStyle}>⚡ Generate All</button>
-      <StatusBar status={status} progress={progress} />
-      {results.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
-          {results.map((r, i) => (
-            <div key={i} style={{ position: "relative" }}>
-              <img src={r.path || r.url} alt={`result ${i}`}
-                style={{ width: "100%", borderRadius: 8, border: "1px solid #222" }} />
-              <div style={{ fontSize: 11, color: "#555", marginTop: 4, noWrap: true, overflow: "hidden", textOverflow: "ellipsis" }}>
-                {r.prompt?.slice(0, 40)}...
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function VariationsPanel({ token }) {
-  const [prompt, setPrompt] = useState("");
-  const [count, setCount] = useState(6);
-  const [status, setStatus] = useState(null);
-  const [results, setResults] = useState([]);
-  const [msg, setMsg] = useState("");
-
-  const run = async () => {
-    if (!prompt.trim()) return;
-    setStatus("processing"); setResults([]); setMsg("");
-    try {
-      const res = await fetch("/api/tools/variations", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, count })
-      });
-      const data = await res.json();
-      if (data.results) { setResults(data.results); setStatus("success"); }
-      else throw new Error(data.error);
-    } catch (e) { setStatus("error"); setMsg(e.message); }
-  };
-
-  return (
-    <div>
-      <div style={{ color: "#aaa", fontSize: 13, marginBottom: 12 }}>
-        Enter a base prompt — get {count} unique style variations automatically.
-      </div>
-      <input
-        value={prompt}
-        onChange={e => setPrompt(e.target.value)}
-        placeholder="e.g. AI influencer Bella Rose in a luxury setting"
-        style={inputStyle}
-      />
-      <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
-        <span style={{ color: "#888", fontSize: 13 }}>Variations:</span>
-        {[4, 6, 9].map(n => (
-          <button key={n} onClick={() => setCount(n)} style={{
-            ...scaleBtn, border: count === n ? "1px solid #FF00FF" : "1px solid #333",
-            color: count === n ? "#FF00FF" : "#888"
-          }}>{n}</button>
-        ))}
-      </div>
-      <button onClick={run} style={btnStyle} disabled={!prompt.trim()}>🔀 Generate Variations</button>
-      <StatusBar status={status} progress={msg} />
-      {results.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
-          {results.map((r, i) => (
-            <img key={i} src={r.path || r.url} alt={`v${i+1}`}
-              style={{ width: "100%", borderRadius: 8, border: "1px solid #222", aspectRatio: "1" }} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ModelsPanel() {
-  const [selected, setSelected] = useState(null);
-  const [filter, setFilter] = useState("all");
-
-  const categories = ["all", "Premium", "Photorealistic", "Fast", "Free", "Artistic", "Anime"];
-  const filtered = filter === "all" ? MODELS_LIST : MODELS_LIST.filter(m => m.category === filter);
-
-  return (
-    <div>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-        {categories.map(c => (
-          <button key={c} onClick={() => setFilter(c)} style={{
-            padding: "4px 12px", borderRadius: 20, fontSize: 12, cursor: "pointer",
-            background: filter === c ? "linear-gradient(135deg,#FF00FF,#00F2EA)" : "transparent",
-            border: filter === c ? "none" : "1px solid #333",
-            color: filter === c ? "#000" : "#888", fontWeight: filter === c ? 700 : 400
-          }}>{c}</button>
-        ))}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {filtered.map(m => (
-          <div key={m.id} onClick={() => setSelected(m.id === selected ? null : m.id)}
-            style={{
-              background: selected === m.id ? `rgba(${m.color === "#FF00FF" ? "255,0,255" : "0,242,234"},0.08)` : "#111",
-              border: `1px solid ${selected === m.id ? m.color : "#222"}`,
-              borderRadius: 10, padding: 14, cursor: "pointer",
-              transition: "all 0.2s", position: "relative", overflow: "hidden"
-            }}>
-            {m.badge && (
-              <span style={{
-                position: "absolute", top: 8, right: 8,
-                background: m.badge === "FREE" ? "#00F2EA" : m.badge === "BEST" || m.badge === "TOP" ? "#FF00FF" : "#FF4500",
-                color: "#000", fontSize: 9, fontWeight: 900, padding: "2px 6px", borderRadius: 4
-              }}>{m.badge}</span>
-            )}
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{m.name}</div>
-            <div style={{ color: m.color, fontSize: 11, marginTop: 2 }}>{m.category}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6 }}>
-              {"★★★★★".slice(0, Math.round(m.rating)).split("").map((s, i) => (
-                <span key={i} style={{ color: "#FFD700", fontSize: 12 }}>★</span>
-              ))}
-              <span style={{ color: "#555", fontSize: 11 }}>{m.rating}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      {selected && (
-        <div style={{ marginTop: 16, background: "#111", border: "1px solid #333", borderRadius: 10, padding: 14 }}>
-          <div style={{ color: "#888", fontSize: 13 }}>Selected: <b style={{ color: "#FF00FF" }}>{selected}</b></div>
-          <div style={{ color: "#555", fontSize: 12, marginTop: 4 }}>Use model ID in generation requests via API</div>
-          <div style={{
-            background: "#0a0a0a", borderRadius: 6, padding: 10, marginTop: 8,
-            fontFamily: "monospace", fontSize: 12, color: "#00F2EA"
-          }}>
-            {`POST /api/generate/image\n{ "prompt": "...", "model": "${selected}" }`}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function InpaintPanel({ token }) {
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [prompt, setPrompt] = useState("");
-  const [status, setStatus] = useState(null);
-  const [msg, setMsg] = useState("");
-
-  const handleFile = (f) => {
-    setImageFile(f);
-    const r = new FileReader();
-    r.onload = (e) => setImagePreview(e.target.result);
-    r.readAsDataURL(f);
-  };
-
-  return (
-    <div>
-      <div style={{ color: "#aaa", fontSize: 13, marginBottom: 12 }}>
-        Upload an image and describe what to change in a specific area.
-      </div>
-      <DropZone label="Drop image to edit" onFile={handleFile} preview={imagePreview} />
-      <input value={prompt} onChange={e => setPrompt(e.target.value)}
-        placeholder="What to add/change e.g. 'replace background with tropical beach'" style={{ ...inputStyle, marginTop: 12 }} />
-      <div style={{
-        background: "#111", border: "1px solid #333", borderRadius: 8,
-        padding: 12, marginTop: 12, color: "#555", fontSize: 12
-      }}>
-        💡 <b style={{ color: "#FF00FF" }}>Pro tip:</b> For precise inpainting, use the mask endpoint via API — draw a white mask over the area you want to edit.
-      </div>
-      <button onClick={() => setStatus("processing")} style={btnStyle} disabled={!imageFile || !prompt}>
-        🖌️ Inpaint Region
-      </button>
-      <StatusBar status={status} progress={msg} />
-    </div>
-  );
-}
-
-function StylePanel({ token }) {
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [prompt, setPrompt] = useState("");
-  const [strength, setStrength] = useState(0.8);
-  const [status, setStatus] = useState(null);
-  const [result, setResult] = useState(null);
-  const [msg, setMsg] = useState("");
-
-  const handleFile = (f) => {
-    setFile(f);
-    const r = new FileReader();
-    r.onload = (e) => setPreview(e.target.result);
-    r.readAsDataURL(f);
-  };
-
-  const run = async () => {
-    if (!file || !prompt) return;
-    setStatus("processing"); setResult(null); setMsg("");
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      fd.append("prompt", prompt);
-      fd.append("strength", strength);
-      const res = await fetch("/api/tools/style-transfer", {
-        method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
-      });
-      const data = await res.json();
-      if (data.output) { setResult(data.output[0]); setStatus("success"); }
-      else throw new Error(data.error);
-    } catch (e) { setStatus("error"); setMsg(e.message); }
-  };
-
-  const STYLES = ["Anime", "Oil Painting", "Watercolor", "Cyberpunk", "Studio Ghibli", "Comic Book"];
-
-  return (
-    <div>
-      <DropZone label="Drop content image" onFile={handleFile} preview={preview} />
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
-        {STYLES.map(s => (
-          <button key={s} onClick={() => setPrompt(s + " style, highly detailed")} style={{
-            padding: "4px 10px", borderRadius: 16, fontSize: 12, cursor: "pointer",
-            background: prompt.startsWith(s) ? "linear-gradient(135deg,#FF00FF,#00F2EA)" : "#111",
-            border: prompt.startsWith(s) ? "none" : "1px solid #333",
-            color: prompt.startsWith(s) ? "#000" : "#888"
-          }}>{s}</button>
-        ))}
-      </div>
-      <input value={prompt} onChange={e => setPrompt(e.target.value)}
-        placeholder="Style description e.g. 'anime, studio ghibli, painterly'" style={{ ...inputStyle, marginTop: 12 }} />
-      <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#888", fontSize: 12 }}>Strength: {strength}</span>
-        <input type="range" min="0.3" max="1" step="0.1" value={strength}
-          onChange={e => setStrength(parseFloat(e.target.value))}
-          style={{ width: "100%", marginTop: 4, accentColor: "#FF00FF" }} />
-      </div>
-      <button onClick={run} style={btnStyle} disabled={!file || !prompt}>🎨 Apply Style</button>
-      <StatusBar status={status} progress={msg} />
-      <ResultImage url={result} label="Style Transfer Result" />
-    </div>
-  );
-}
-
-// ── Main Component ────────────────────────────────────────────────
-
-const PANEL_COMPONENTS = {
-  "faceswap": FaceSwapPanel,
-  "remove-bg": RemoveBgPanel,
-  "upscale": UpscalePanel,
-  "enhance-face": UpscalePanel,
-  "inpaint": InpaintPanel,
-  "pose": InpaintPanel,
-  "style-transfer": StylePanel,
-  "bulk": BulkPanel,
-  "variations": VariationsPanel,
-  "models": ModelsPanel,
+const injectStyles = () => {
+  if (document.getElementById("ais-styles")) return;
+  const s = document.createElement("style");
+  s.id = "ais-styles";
+  s.textContent = `
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#050505;color:#E0E0E0;font-family:'Syne',sans-serif}
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:#0C0C0C}
+    ::-webkit-scrollbar-thumb{background:#1A1A1A;border-radius:2px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    .ais-btn{font-family:'Syne',sans-serif;font-weight:700;border:none;cursor:pointer;border-radius:8px;transition:all 0.2s;letter-spacing:0.03em}
+    .ais-btn-gold{background:#C9A84C;color:#000;padding:14px 28px;font-size:14px}
+    .ais-btn-gold:hover{background:#E8C86A;transform:translateY(-1px)}
+    .ais-btn-ghost{background:transparent;border:1px solid #1A1A1A;color:#888;padding:10px 20px;font-size:13px}
+    .ais-btn-ghost:hover{border-color:#C9A84C;color:#C9A84C}
+    .ais-btn-ghost.active{border-color:#C9A84C;color:#C9A84C;background:rgba(201,168,76,0.08)}
+    .ais-input{background:#0C0C0C;border:1px solid #1A1A1A;border-radius:8px;padding:12px 16px;color:#E0E0E0;font-family:'Syne',sans-serif;font-size:14px;width:100%;transition:border-color 0.2s;resize:vertical}
+    .ais-input:focus{outline:none;border-color:#C9A84C}
+    .ais-input::placeholder{color:#444}
+    .ais-card{background:#0C0C0C;border:1px solid #1A1A1A;border-radius:12px;transition:border-color 0.2s}
+    .ais-card:hover{border-color:#2A2A2A}
+    .ais-nav-btn{background:transparent;border:none;color:#4A4A4A;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;padding:10px 16px;border-radius:6px;transition:all 0.2s;text-transform:uppercase}
+    .ais-nav-btn:hover{color:#E0E0E0;background:#0C0C0C}
+    .ais-nav-btn.active{color:#C9A84C;background:#0C0C0C;border:1px solid #1A1A1A}
+    select.ais-input{cursor:pointer}
+    option{background:#0C0C0C}
+  `;
+  document.head.appendChild(s);
 };
 
-export default function ToolsStudio({ token }) {
-  const [activeTool, setActiveTool] = useState("faceswap");
-  const ActivePanel = PANEL_COMPONENTS[activeTool] || ModelsPanel;
+function Spinner() {
+  return <div style={{ width:20, height:20, border:"2px solid #1A1A1A", borderTop:"2px solid #C9A84C", borderRadius:"50%", animation:"spin 0.8s linear infinite", display:"inline-block" }} />;
+}
+
+function Tag({ children, color = "#C9A84C" }) {
+  return (
+    <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, letterSpacing:3, color, border:`1px solid ${color}33`, background:`${color}11`, padding:"3px 10px", borderRadius:4, textTransform:"uppercase" }}>
+      {children}
+    </span>
+  );
+}
+
+// ── VIDEO AD GENERATOR ──────────────────────────────────────────────────────
+function VideoAdGenerator() {
+  const [form, setForm] = useState({ product:"", niche:"Lifestyle", style:"TikTok Hook", duration:"30 seconds", tone:"Energetic and aspirational", cta:"Link in bio" });
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(null);
+
+  const generate = async () => {
+    if (!form.product.trim()) { setError("Enter a product or creator description"); return; }
+    setLoading(true); setError(null); setResult(null);
+
+    try {
+      const resp = await fetch("/api/claude", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          model: CLAUDE_MODEL,
+          max_tokens:1500,
+          system:`You are a viral video ad scriptwriter for the AI Influencer Studio platform. You write scripts that get results. Always respond with valid JSON only. No markdown, no backticks, no explanation outside the JSON.`,
+          messages:[{ role:"user", content:`Write a complete ${form.duration} ${form.style} video ad script for:\n\nPRODUCT/CREATOR: ${form.product}\nNICHE: ${form.niche}\nTONE: ${form.tone}\nCTA: ${form.cta}\n\nReturn JSON with exactly these fields:\n{\n  "hook": "First 3-5 words spoken on screen — must stop the scroll",\n  "hook_visual": "Exactly what the viewer sees in frame at second 0",\n  "script": "Full word-for-word voiceover script",\n  "scene_breakdown": [{"second":"0-3","visual":"what's on screen","audio":"what's said or heard"}],\n  "caption": "Social media caption with hashtags (under 150 chars)",\n  "cta_line": "The exact call to action line spoken",\n  "viral_reason": "One sentence — why this will perform",\n  "estimated_cpm_improvement": "e.g. 40% higher CTR than average"\n}` }]
+        })
+      });
+
+      const data = await resp.json();
+      const raw = data.content[0].text.trim().replace(/```json|```/g,"").trim();
+      setResult(JSON.parse(raw));
+    } catch(e) {
+      setError("Generation failed. Check your API connection.");
+    }
+    setLoading(false);
+  };
+
+  const copy = (text, key) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#0a0a0a", color: "#fff", fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&display=swap');
-        @keyframes spin { to { transform: rotate(360deg); } }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #333; }
-        button:disabled { opacity: 0.4; cursor: not-allowed; }
-      `}</style>
-
-      {/* Sidebar */}
-      <div style={{
-        width: 220, background: "#0d0d0d", borderRight: "1px solid #1a1a1a",
-        padding: "20px 0", overflowY: "auto", flexShrink: 0
-      }}>
-        <div style={{ padding: "0 16px 20px", borderBottom: "1px solid #1a1a1a" }}>
-          <div style={{
-            fontSize: 11, fontWeight: 900, letterSpacing: 3,
-            background: "linear-gradient(135deg,#FF00FF,#00F2EA)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-          }}>TOOLS STUDIO</div>
-          <div style={{ color: "#444", fontSize: 11, marginTop: 2 }}>SeaArt-level features</div>
+    <div style={{ display:"grid", gridTemplateColumns: result ? "1fr 1fr" : "1fr", gap:24, animation:"fadeUp 0.4s ease" }}>
+      <div>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, letterSpacing:3, color:"#C9A84C", marginBottom:16 }}>// INPUT</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <div>
+            <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>PRODUCT OR CREATOR DESCRIPTION *</div>
+            <textarea className="ais-input" rows={3} placeholder="e.g. Luna AI — lifestyle creator on Fanvue, sells fitness tips and exclusive content to 5K subscribers" value={form.product} onChange={e => setForm(f => ({...f, product:e.target.value}))} />
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <div>
+              <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>NICHE</div>
+              <select className="ais-input" value={form.niche} onChange={e => setForm(f => ({...f, niche:e.target.value}))}>
+                {NICHES.map(n => <option key={n}>{n}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>AD STYLE</div>
+              <select className="ais-input" value={form.style} onChange={e => setForm(f => ({...f, style:e.target.value}))}>
+                {AD_STYLES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>DURATION</div>
+              <select className="ais-input" value={form.duration} onChange={e => setForm(f => ({...f, duration:e.target.value}))}>
+                {DURATIONS.map(d => <option key={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>TONE</div>
+              <input className="ais-input" value={form.tone} onChange={e => setForm(f => ({...f, tone:e.target.value}))} placeholder="e.g. Energetic, aspirational" />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>CALL TO ACTION</div>
+            <input className="ais-input" value={form.cta} onChange={e => setForm(f => ({...f, cta:e.target.value}))} placeholder="e.g. Link in bio, DM me NOW, Subscribe today" />
+          </div>
+          {error && <div style={{ background:"rgba(255,59,59,0.1)", border:"1px solid #FF3B3B33", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#FF3B3B" }}>{error}</div>}
+          <button className="ais-btn ais-btn-gold" onClick={generate} disabled={loading} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10, opacity:loading?0.7:1 }}>
+            {loading ? <><Spinner /> Generating Script...</> : "Generate Video Ad Script →"}
+          </button>
         </div>
-        <div style={{ padding: "12px 8px" }}>
-          {TOOLS.map(tool => (
-            <button key={tool.id} onClick={() => setActiveTool(tool.id)} style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 10,
-              padding: "10px 12px", borderRadius: 8, cursor: "pointer",
-              background: activeTool === tool.id ? "rgba(255,0,255,0.1)" : "transparent",
-              border: activeTool === tool.id ? "1px solid rgba(255,0,255,0.3)" : "1px solid transparent",
-              color: activeTool === tool.id ? "#fff" : "#666",
-              textAlign: "left", marginBottom: 2, transition: "all 0.15s"
-            }}>
-              <span style={{ fontSize: 18 }}>{tool.icon}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: activeTool === tool.id ? 700 : 400, display: "flex", alignItems: "center", gap: 6 }}>
-                  {tool.label}
-                  {tool.badge && (
-                    <span style={{
-                      fontSize: 8, fontWeight: 900, padding: "1px 5px", borderRadius: 3,
-                      background: tool.badge === "NEW" ? "#00F2EA" : "#FF00FF", color: "#000"
-                    }}>{tool.badge}</span>
-                  )}
-                </div>
+      </div>
+
+      {result && (
+        <div style={{ animation:"fadeUp 0.4s ease" }}>
+          <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, letterSpacing:3, color:"#00D46A", marginBottom:16 }}>// OUTPUT READY</div>
+          <div style={{ background:"rgba(201,168,76,0.06)", border:"1px solid #C9A84C33", borderRadius:12, padding:20, marginBottom:16 }}>
+            <div style={{ fontSize:11, color:"#C9A84C", fontFamily:"'JetBrains Mono',monospace", marginBottom:8 }}>SCROLL-STOPPING HOOK</div>
+            <div style={{ fontSize:22, fontWeight:800, color:"#E0E0E0", marginBottom:8 }}>"{result.hook}"</div>
+            <div style={{ fontSize:12, color:"#888", fontFamily:"'Lora',serif", fontStyle:"italic" }}>Visual: {result.hook_visual}</div>
+          </div>
+          <div className="ais-card" style={{ padding:20, marginBottom:12, position:"relative" }}>
+            <div style={{ fontSize:11, color:"#888", fontFamily:"'JetBrains Mono',monospace", marginBottom:10 }}>FULL SCRIPT</div>
+            <div style={{ fontSize:14, color:"#CCC", lineHeight:1.8, fontFamily:"'Lora',serif", whiteSpace:"pre-wrap" }}>{result.script}</div>
+            <button onClick={() => copy(result.script, "script")} className="ais-btn ais-btn-ghost" style={{ marginTop:12, fontSize:11 }}>
+              {copied==="script" ? "✓ Copied" : "Copy Script"}
+            </button>
+          </div>
+          {result.scene_breakdown && result.scene_breakdown.length > 0 && (
+            <div className="ais-card" style={{ padding:20, marginBottom:12 }}>
+              <div style={{ fontSize:11, color:"#888", fontFamily:"'JetBrains Mono',monospace", marginBottom:12 }}>SCENE BREAKDOWN</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {result.scene_breakdown.map((scene, i) => (
+                  <div key={i} style={{ display:"grid", gridTemplateColumns:"60px 1fr 1fr", gap:10, fontSize:12, borderBottom:"1px solid #1A1A1A", paddingBottom:8 }}>
+                    <div style={{ color:"#C9A84C", fontFamily:"'JetBrains Mono',monospace", fontSize:10 }}>{scene.second}s</div>
+                    <div style={{ color:"#888" }}>{scene.visual}</div>
+                    <div style={{ color:"#CCC" }}>{scene.audio}</div>
+                  </div>
+                ))}
               </div>
+            </div>
+          )}
+          <div className="ais-card" style={{ padding:20, marginBottom:12 }}>
+            <div style={{ fontSize:11, color:"#888", fontFamily:"'JetBrains Mono',monospace", marginBottom:8 }}>CAPTION + HASHTAGS</div>
+            <div style={{ fontSize:13, color:"#CCC", lineHeight:1.7 }}>{result.caption}</div>
+            <button onClick={() => copy(result.caption, "caption")} className="ais-btn ais-btn-ghost" style={{ marginTop:10, fontSize:11 }}>
+              {copied==="caption" ? "✓ Copied" : "Copy Caption"}
+            </button>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <div className="ais-card" style={{ padding:16 }}>
+              <div style={{ fontSize:10, color:"#888", fontFamily:"'JetBrains Mono',monospace", marginBottom:6 }}>WHY IT WORKS</div>
+              <div style={{ fontSize:12, color:"#CCC", lineHeight:1.6 }}>{result.viral_reason}</div>
+            </div>
+            <div className="ais-card" style={{ padding:16, background:"rgba(0,212,106,0.05)", borderColor:"#00D46A33" }}>
+              <div style={{ fontSize:10, color:"#00D46A", fontFamily:"'JetBrains Mono',monospace", marginBottom:6 }}>PERFORMANCE EST.</div>
+              <div style={{ fontSize:12, color:"#CCC", lineHeight:1.6 }}>{result.estimated_cpm_improvement}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── UGC BATCH GENERATOR ─────────────────────────────────────────────────────
+function UGCGenerator() {
+  const [brand, setBrand] = useState("");
+  const [count, setCount] = useState(5);
+  const [platform, setPlatform] = useState("TikTok / Instagram Reels");
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState([]);
+  const [error, setError] = useState(null);
+
+  const generate = async () => {
+    if (!brand.trim()) { setError("Enter a brand or product description"); return; }
+    setLoading(true); setError(null); setResults([]);
+    try {
+      const resp = await fetch("/api/claude", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          model: CLAUDE_MODEL,
+          max_tokens:2000,
+          system:"You are a UGC content strategist. Write authentic, high-converting UGC video scripts. JSON only. No markdown.",
+          messages:[{ role:"user", content:`Create ${count} different UGC video scripts for:\n\nBRAND/PRODUCT: ${brand}\nPLATFORM: ${platform}\n\nEach script must use a DIFFERENT angle: testimonial, unboxing, transformation, comparison, lifestyle, how-to, reaction, storytelling.\n\nReturn a JSON array of ${count} objects:\n[{\n  "angle": "script angle name",\n  "hook": "opening hook (under 10 words)",\n  "script": "full 15-30 second script",\n  "caption": "caption with hashtags",\n  "cta": "call to action"\n}]` }]
+        })
+      });
+      const data = await resp.json();
+      const raw = data.content[0].text.trim().replace(/```json|```/g,"").trim();
+      setResults(JSON.parse(raw));
+    } catch(e) {
+      setError("Generation failed. Try again.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ animation:"fadeUp 0.4s ease" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr auto auto auto", gap:12, alignItems:"end", marginBottom:20 }}>
+        <div>
+          <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>BRAND / PRODUCT</div>
+          <input className="ais-input" value={brand} onChange={e => setBrand(e.target.value)} placeholder="e.g. Shopify store selling minimalist watches, $89 price point" />
+        </div>
+        <div>
+          <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>VIDEOS</div>
+          <select className="ais-input" value={count} onChange={e => setCount(Number(e.target.value))} style={{ width:80 }}>
+            {[3,5,10].map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </div>
+        <div>
+          <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>PLATFORM</div>
+          <select className="ais-input" value={platform} onChange={e => setPlatform(e.target.value)} style={{ width:160 }}>
+            {["TikTok / Instagram Reels","YouTube Shorts","Facebook Ads","LinkedIn"].map(p => <option key={p}>{p}</option>)}
+          </select>
+        </div>
+        <button className="ais-btn ais-btn-gold" onClick={generate} disabled={loading} style={{ height:44, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap" }}>
+          {loading ? <><Spinner /> Generating...</> : `Generate ${count} Scripts →`}
+        </button>
+      </div>
+      {error && <div style={{ background:"rgba(255,59,59,0.1)", border:"1px solid #FF3B3B33", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#FF3B3B", marginBottom:16 }}>{error}</div>}
+      {results.length > 0 && (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(300px, 1fr))", gap:16 }}>
+          {results.map((r, i) => (
+            <div key={i} className="ais-card" style={{ padding:20, animation:`fadeUp 0.4s ${i*0.06}s ease both` }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                <Tag>{r.angle}</Tag>
+                <span style={{ fontSize:11, color:"#444", fontFamily:"'JetBrains Mono',monospace" }}>#{i+1}</span>
+              </div>
+              <div style={{ fontSize:16, fontWeight:700, color:"#E0E0E0", marginBottom:10, lineHeight:1.3 }}>"{r.hook}"</div>
+              <div style={{ fontSize:13, color:"#888", lineHeight:1.7, marginBottom:12, fontFamily:"'Lora',serif" }}>{r.script}</div>
+              <div style={{ fontSize:12, color:"#C9A84C", marginBottom:8, lineHeight:1.5 }}>{r.caption}</div>
+              <div style={{ fontSize:12, color:"#00D46A", fontFamily:"'JetBrains Mono',monospace" }}>CTA: {r.cta}</div>
+              <button onClick={() => { navigator.clipboard.writeText(`${r.hook}\n\n${r.script}\n\n${r.caption}\n\nCTA: ${r.cta}`); }} className="ais-btn ais-btn-ghost" style={{ marginTop:12, fontSize:11, width:"100%" }}>
+                Copy All
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── CREATOR MANAGER ─────────────────────────────────────────────────────────
+function CreatorManager() {
+  const [name, setName] = useState("");
+  const [niche, setNiche] = useState("Lifestyle");
+  const [platform, setPlatform] = useState("Fanvue");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const buildCreator = async () => {
+    if (!name.trim()) return;
+    setLoading(true); setResult(null);
+    try {
+      const resp = await fetch("/api/claude", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          model: CLAUDE_MODEL,
+          max_tokens:2000,
+          system:"You are an AI creator agency strategist. Build complete creator personas and content strategies. JSON only.",
+          messages:[{ role:"user", content:`Build a complete AI creator persona and 30-day content strategy for:\n\nNAME: ${name}\nNICHE: ${niche}\nPLATFORM: ${platform}\n\nReturn JSON:\n{\n  "persona": {\n    "full_name": "${name}",\n    "age": number,\n    "backstory": "2-3 sentence compelling backstory",\n    "personality": "3-4 personality traits",\n    "voice": "how they speak and write",\n    "visual_style": "appearance and aesthetic description for image generation",\n    "content_pillars": ["pillar1","pillar2","pillar3"]\n  },\n  "month1_targets": {\n    "subscribers": number,\n    "revenue_estimate": "$X-$Y",\n    "posts_per_week": number,\n    "dms_per_day": number\n  },\n  "week1_content": [\n    {"day":1,"type":"post type","hook":"opening hook","topic":"what it's about"}\n  ],\n  "dm_opener": "first DM sent to new subscribers",\n  "bio": "platform bio under 150 chars",\n  "pricing_recommendation": {\n    "subscription": "$X/mo",\n    "ppv": "$X-$Y per post",\n    "custom_content": "$X"\n  }\n}` }]
+        })
+      });
+      const data = await resp.json();
+      const raw = data.content[0].text.trim().replace(/```json|```/g,"").trim();
+      setResult(JSON.parse(raw));
+    } catch(e) {}
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ animation:"fadeUp 0.4s ease" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr auto auto auto", gap:12, alignItems:"end", marginBottom:24 }}>
+        <div>
+          <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>CREATOR NAME</div>
+          <input className="ais-input" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Luna Voss, Jade Tokyo, Marcus Fit" />
+        </div>
+        <div>
+          <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>NICHE</div>
+          <select className="ais-input" value={niche} onChange={e => setNiche(e.target.value)} style={{ width:140 }}>
+            {NICHES.map(n => <option key={n}>{n}</option>)}
+          </select>
+        </div>
+        <div>
+          <div style={{ fontSize:12, color:"#888", marginBottom:6, fontFamily:"'JetBrains Mono',monospace" }}>PLATFORM</div>
+          <select className="ais-input" value={platform} onChange={e => setPlatform(e.target.value)} style={{ width:120 }}>
+            {["Fanvue","OnlyFans","NVME","Instagram","TikTok"].map(p => <option key={p}>{p}</option>)}
+          </select>
+        </div>
+        <button className="ais-btn ais-btn-gold" onClick={buildCreator} disabled={loading} style={{ height:44, display:"flex", alignItems:"center", gap:8 }}>
+          {loading ? <><Spinner /> Building...</> : "Build Creator →"}
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, animation:"fadeUp 0.4s ease" }}>
+          <div className="ais-card" style={{ padding:24 }}>
+            <Tag color="#C9A84C">PERSONA</Tag>
+            <div style={{ marginTop:16 }}>
+              <div style={{ fontSize:24, fontWeight:800, marginBottom:4 }}>{result.persona.full_name}</div>
+              <div style={{ fontSize:13, color:"#888", fontFamily:"'JetBrains Mono',monospace", marginBottom:12 }}>Age {result.persona.age} · {niche} · {platform}</div>
+              <div style={{ fontSize:13, color:"#CCC", lineHeight:1.7, marginBottom:12, fontFamily:"'Lora',serif", fontStyle:"italic" }}>{result.persona.backstory}</div>
+              <div style={{ fontSize:12, color:"#888", marginBottom:8 }}>Personality: <span style={{ color:"#CCC" }}>{result.persona.personality}</span></div>
+              <div style={{ fontSize:12, color:"#888", marginBottom:8 }}>Voice: <span style={{ color:"#CCC" }}>{result.persona.voice}</span></div>
+              <div style={{ fontSize:12, color:"#C9A84C", marginBottom:4, fontFamily:"'JetBrains Mono',monospace" }}>// CONTENT PILLARS</div>
+              {result.persona.content_pillars?.map((p,i) => (
+                <div key={i} style={{ fontSize:12, color:"#888", padding:"4px 0", borderBottom:"1px solid #1A1A1A" }}>→ {p}</div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+            <div className="ais-card" style={{ padding:20, background:"rgba(0,212,106,0.04)", borderColor:"#00D46A22" }}>
+              <Tag color="#00D46A">MONTH 1 TARGETS</Tag>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginTop:14 }}>
+                {[
+                  { label:"Est. Revenue", val:result.month1_targets?.revenue_estimate },
+                  { label:"Subscribers", val:result.month1_targets?.subscribers },
+                  { label:"Posts/Week", val:result.month1_targets?.posts_per_week },
+                  { label:"DMs/Day", val:result.month1_targets?.dms_per_day },
+                ].map((s,i) => (
+                  <div key={i} style={{ background:"#0C0C0C", borderRadius:8, padding:12 }}>
+                    <div style={{ fontSize:10, color:"#4A4A4A", fontFamily:"'JetBrains Mono',monospace", marginBottom:4 }}>{s.label}</div>
+                    <div style={{ fontSize:18, fontWeight:800, color:"#00D46A" }}>{s.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ais-card" style={{ padding:20 }}>
+              <Tag color="#3B8BFF">PRICING</Tag>
+              <div style={{ marginTop:12, display:"flex", flexDirection:"column", gap:8 }}>
+                {Object.entries(result.pricing_recommendation || {}).map(([k,v]) => (
+                  <div key={k} style={{ display:"flex", justifyContent:"space-between", fontSize:13, borderBottom:"1px solid #1A1A1A", paddingBottom:8 }}>
+                    <span style={{ color:"#888", textTransform:"capitalize" }}>{k.replace("_"," ")}</span>
+                    <span style={{ color:"#C9A84C", fontWeight:700 }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ais-card" style={{ padding:20 }}>
+              <Tag color="#8B5CF6">DM OPENER</Tag>
+              <div style={{ fontSize:13, color:"#CCC", lineHeight:1.7, marginTop:12, fontFamily:"'Lora',serif", fontStyle:"italic" }}>
+                "{result.dm_opener}"
+              </div>
+              <button onClick={() => navigator.clipboard.writeText(result.dm_opener)} className="ais-btn ais-btn-ghost" style={{ marginTop:10, fontSize:11 }}>Copy DM</button>
+            </div>
+          </div>
+
+          {result.week1_content && (
+            <div className="ais-card" style={{ padding:20, gridColumn:"1/-1" }}>
+              <Tag>WEEK 1 CONTENT PLAN</Tag>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))", gap:10, marginTop:14 }}>
+                {result.week1_content.slice(0,7).map((d,i) => (
+                  <div key={i} style={{ background:"#050505", border:"1px solid #1A1A1A", borderRadius:8, padding:12 }}>
+                    <div style={{ fontSize:10, color:"#C9A84C", fontFamily:"'JetBrains Mono',monospace", marginBottom:6 }}>DAY {d.day} — {d.type}</div>
+                    <div style={{ fontSize:12, fontWeight:700, marginBottom:4 }}>"{d.hook}"</div>
+                    <div style={{ fontSize:11, color:"#666" }}>{d.topic}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PRICING PAGE ─────────────────────────────────────────────────────────────
+function PricingPage() {
+  return (
+    <div style={{ animation:"fadeUp 0.4s ease" }}>
+      <div style={{ textAlign:"center", marginBottom:48 }}>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, letterSpacing:4, color:"#C9A84C", marginBottom:16 }}>// 001 — PRICING TIERS</div>
+        <h2 style={{ fontSize:"clamp(32px,5vw,64px)", fontWeight:800, lineHeight:0.95, marginBottom:16 }}>
+          No fluff.<br /><em style={{ fontFamily:"'Lora',serif", color:"#C9A84C" }}>Max ROI.</em>
+        </h2>
+        <p style={{ fontFamily:"'Lora',serif", fontSize:15, color:"#666", maxWidth:500, margin:"0 auto" }}>
+          The Influencer AI charges $19–$99 for image generation only. You deliver a complete automated Fanvue pipeline that earns clients $3,000–5,000/month. At $197 that's a 15–25x ROI. No one cancels a subscription that makes them money.
+        </p>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(240px, 1fr))", gap:12, marginBottom:48 }}>
+        {PLANS.map((plan, i) => (
+          <div key={plan.id} style={{
+            background: plan.hero ? "linear-gradient(135deg,#0C0C0C,#100E00)" : "#0C0C0C",
+            border: `1px solid ${plan.hero ? plan.color : "#1A1A1A"}`,
+            borderRadius:12, padding:28, position:"relative",
+            boxShadow: plan.hero ? `0 0 40px ${plan.color}11` : "none",
+            animation:`fadeUp 0.4s ${i*0.08}s ease both`
+          }}>
+            {plan.hero && (
+              <div style={{ position:"absolute", top:-1, left:"50%", transform:"translateX(-50%)", background:plan.color, color:"#000", fontFamily:"'JetBrains Mono',monospace", fontSize:8, letterSpacing:2, padding:"3px 14px", borderRadius:"0 0 6px 6px", fontWeight:500 }}>
+                RECOMMENDED
+              </div>
+            )}
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+              <Tag color={plan.color}>{plan.tag}</Tag>
+              {plan.adult && <span style={{ fontSize:10, color:"#FF3B3B", fontFamily:"'JetBrains Mono',monospace" }}>18+ GATE</span>}
+            </div>
+            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, letterSpacing:3, color:"#4A4A4A", marginBottom:8 }}>{plan.name.toUpperCase()}</div>
+            <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:4 }}>
+              <span style={{ fontSize:48, fontWeight:800, color:plan.color, lineHeight:1 }}>${plan.price.toLocaleString()}</span>
+              <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, color:"#4A4A4A" }}>{plan.period}</span>
+            </div>
+            <div style={{ fontSize:12, color:"#00D46A", fontFamily:"'Lora',serif", fontStyle:"italic", marginBottom:20, padding:"8px 12px", background:"rgba(0,212,106,0.05)", borderRadius:6, border:"1px solid rgba(0,212,106,0.1)" }}>
+              {plan.earn}
+            </div>
+            <ul style={{ listStyle:"none", marginBottom:20 }}>
+              {plan.features.map((f,j) => (
+                <li key={j} style={{ fontSize:12, color:"#888", padding:"5px 0", borderBottom:"1px solid #1A1A1A", display:"flex", gap:8, alignItems:"center" }}>
+                  <span style={{ color:plan.color }}>→</span>{f}
+                </li>
+              ))}
+            </ul>
+            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, color:"#2A2A2A", paddingTop:12, borderTop:"1px solid #1A1A1A" }}>{plan.cost}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginBottom:48 }}>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, letterSpacing:4, color:"#C9A84C", marginBottom:16 }}>// 002 — UGC + AD VIDEO PRICING</div>
+        <div style={{ background:"#0C0C0C", border:"1px solid #1A1A1A", borderRadius:12, overflow:"hidden" }}>
+          <table style={{ width:"100%", borderCollapse:"collapse" }}>
+            <thead>
+              <tr style={{ background:"#0A0A0A" }}>
+                {["DELIVERABLE","YOUR PRICE","YOUR COST","MARGIN"].map(h => (
+                  <th key={h} style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, letterSpacing:3, color:"#C9A84C", padding:"14px 16px", textAlign:"left", borderBottom:"1px solid #1A1A1A" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {UGC_PRICES.map((row, i) => (
+                <tr key={i} style={{ borderBottom:"1px solid #1A1A1A" }}>
+                  <td style={{ padding:"12px 16px", fontSize:13, color:"#AAA" }}>{row.name}</td>
+                  <td style={{ padding:"12px 16px", fontSize:13, color:"#C9A84C", fontWeight:700 }}>{row.price}</td>
+                  <td style={{ padding:"12px 16px", fontSize:13, color:"#444" }}>{row.cost}</td>
+                  <td style={{ padding:"12px 16px", fontSize:13, color:"#00D46A" }}>{row.margin}</td>
+                </tr>
+              ))}
+              <tr style={{ background:"rgba(201,168,76,0.04)" }}>
+                <td style={{ padding:"12px 16px", fontSize:13, fontWeight:700, color:"#C9A84C" }}>FULL UGC EMPIRE PACKAGE</td>
+                <td style={{ padding:"12px 16px", fontSize:13, color:"#C9A84C", fontWeight:700 }}>$2,997/mo</td>
+                <td style={{ padding:"12px 16px", fontSize:13, color:"#444" }}>~$100/mo</td>
+                <td style={{ padding:"12px 16px", fontSize:13, color:"#00D46A" }}>97%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={{ background:"linear-gradient(135deg,#0A0A00,#050500)", border:"1px solid #C9A84C33", borderRadius:16, padding:40 }}>
+        <h3 style={{ fontSize:28, fontWeight:800, marginBottom:16 }}>
+          Target: <span style={{ color:"#C9A84C" }}>50 clients</span> @ avg $250/mo = <span style={{ color:"#00D46A" }}>$12,500/mo</span>
+        </h3>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12 }}>
+          {[
+            { label:"10 Starter clients", val:"$970/mo" },
+            { label:"20 Fanvue Pro clients", val:"$3,940/mo" },
+            { label:"10 Empire clients", val:"$4,970/mo" },
+            { label:"5 UGC retainers", val:"$2,985/mo" },
+            { label:"5 DFY setups", val:"$12,500 + $4,985/mo" },
+            { label:"TOTAL RECURRING", val:"$12,385/mo", gold:true },
+          ].map((s,i) => (
+            <div key={i} style={{ background:"#0C0C0C", borderRadius:8, padding:16, border: s.gold ? "1px solid #C9A84C33" : "1px solid #1A1A1A" }}>
+              <div style={{ fontSize:10, color:"#4A4A4A", fontFamily:"'JetBrains Mono',monospace", marginBottom:6 }}>{s.label}</div>
+              <div style={{ fontSize:16, fontWeight:800, color: s.gold ? "#C9A84C" : "#00D46A" }}>{s.val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ─────────────────────────────────────────────────────────────────
+const TABS = [
+  { id:"video", label:"Video Ad Generator" },
+  { id:"ugc", label:"UGC Batch Creator" },
+  { id:"creator", label:"Creator Builder" },
+  { id:"pricing", label:"Pricing & Plans" },
+];
+
+export default function ToolsStudio() {
+  const [tab, setTab] = useState("video");
+
+  useEffect(() => { injectStyles(); }, []);
+
+  return (
+    <div style={{ background:"#050505", minHeight:"100vh", fontFamily:"'Syne',sans-serif" }}>
+      <div style={{ borderBottom:"1px solid #1A1A1A", padding:"24px 40px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+          <div style={{ width:36, height:36, background:"#C9A84C", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:18, color:"#000" }}>A</div>
+          <div>
+            <div style={{ fontWeight:800, fontSize:18, letterSpacing:"-0.02em" }}>AI Influencer Studio</div>
+            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, letterSpacing:3, color:"#4A4A4A" }}>DOLLAR DOUBLE EMPIRE · AIGROWTHHQ.COM</div>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:4 }}>
+          {TABS.map(t => (
+            <button key={t.id} className={`ais-nav-btn ${tab===t.id?"active":""}`} onClick={() => setTab(t.id)}>
+              {t.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Main Panel */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 28 }}>
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 32 }}>{TOOLS.find(t => t.id === activeTool)?.icon}</span>
-            <div>
-              <h1 style={{ fontSize: 22, fontWeight: 900 }}>
-                {TOOLS.find(t => t.id === activeTool)?.label}
-              </h1>
-              <div style={{ color: "#555", fontSize: 13, marginTop: 2 }}>
-                {TOOLS.find(t => t.id === activeTool)?.desc}
-              </div>
-            </div>
-          </div>
-          <div style={{ height: 1, background: "linear-gradient(to right, #FF00FF22, transparent)", marginTop: 16 }} />
+      <div style={{ padding:"32px 40px 0", borderBottom:"1px solid #1A1A1A", marginBottom:0 }}>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, letterSpacing:3, color:"#C9A84C", marginBottom:8 }}>
+          // {TABS.find(t=>t.id===tab)?.label.toUpperCase()}
         </div>
+        {tab === "video" && <p style={{ fontFamily:"'Lora',serif", fontSize:14, color:"#666", marginBottom:20 }}>Enter any product or creator description. Get a complete, ready-to-film video ad script in seconds.</p>}
+        {tab === "ugc" && <p style={{ fontFamily:"'Lora',serif", fontSize:14, color:"#666", marginBottom:20 }}>Generate a full batch of UGC scripts for any brand. Each uses a different proven angle.</p>}
+        {tab === "creator" && <p style={{ fontFamily:"'Lora',serif", fontSize:14, color:"#666", marginBottom:20 }}>Build a complete AI creator persona with backstory, pricing, 30-day content plan, and DM strategy.</p>}
+        {tab === "pricing" && <p style={{ fontFamily:"'Lora',serif", fontSize:14, color:"#666", marginBottom:20 }}>Your complete price list. $97 to $2,997. 97–99% margins across every product.</p>}
+      </div>
 
-        {/* Active Tool Panel */}
-        <div style={{ maxWidth: 560 }}>
-          <ActivePanel token={token} />
-        </div>
+      <div style={{ padding:"32px 40px 80px" }}>
+        {tab === "video" && <VideoAdGenerator />}
+        {tab === "ugc" && <UGCGenerator />}
+        {tab === "creator" && <CreatorManager />}
+        {tab === "pricing" && <PricingPage />}
+      </div>
+
+      <div style={{ borderTop:"1px solid #1A1A1A", padding:"20px 40px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, letterSpacing:2, color:"#2A2A2A" }}>DOLLAR DOUBLE MARKETING · AI PROFIT HUSTLE · NVME.LIVE</div>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, letterSpacing:2, color:"#2A2A2A" }}>NO FLUFF. MAX ROI.</div>
       </div>
     </div>
   );
 }
-
-// ── Shared Styles ─────────────────────────────────────────────────
-
-const btnStyle = {
-  width: "100%", marginTop: 14, padding: "12px 0",
-  background: "linear-gradient(135deg, #FF00FF, #00F2EA)",
-  border: "none", borderRadius: 10, color: "#000",
-  fontWeight: 900, fontSize: 14, cursor: "pointer",
-  letterSpacing: 0.5, transition: "opacity 0.2s"
-};
-
-const tabBtnStyle = {
-  padding: "7px 16px", borderRadius: 8, border: "1px solid #333",
-  cursor: "pointer", fontSize: 13, fontWeight: 600, transition: "all 0.15s"
-};
-
-const scaleBtn = {
-  padding: "4px 14px", borderRadius: 6, background: "transparent",
-  cursor: "pointer", fontSize: 13, fontWeight: 600
-};
-
-const inputStyle = {
-  width: "100%", background: "#111", border: "1px solid #333",
-  borderRadius: 8, padding: "10px 14px", color: "#fff",
-  fontSize: 13, outline: "none"
-};
