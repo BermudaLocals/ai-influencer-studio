@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play - Real or AI?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .correct-flash { animation: correctFlash 0.5s ease-out; }
+        .wrong-flash { animation: wrongFlash 0.5s ease-out; }
+        @keyframes correctFlash {
+            0% { background-color: rgba(34, 197, 94, 0.5); }
+            100% { background-color: transparent; }
+        }
+        @keyframes wrongFlash {
+            0% { background-color: rgba(239, 68, 68, 0.5); }
+            100% { background-color: transparent; }
+        }
+        .timer-bar {
+            transition: width 0.1s linear;
+        }
+        .streak-fire {
+            animation: firePulse 0.5s ease-in-out infinite;
+        }
+        @keyframes firePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        #viewer3d {
+            width: 100%;
+            height: 400px;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        .confidence-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #fbbf24;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header -->
+    <header class="glass fixed top-0 w-full z-50 px-6 py-3">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <a href="/" class="flex items-center space-x-2">
+                <span class="text-2xl">🎭</span>
+                <span class="font-bold">Real or AI?</span>
+            </a>
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-2">
+                    <span class="text-yellow-400">⭐</span>
+                    <span id="totalPoints" class="font-bold">0</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="streakIcon">🔥</span>
+                    <span id="currentStreak" class="font-bold">0</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span>🎯</span>
+                    <span id="accuracy" class="font-bold">0%</span>
+                </div>
+                <div class="glass px-3 py-1 rounded-full">
+                    <span>Lv.</span>
+                    <span id="userLevel" class="font-bold text-yellow-400">1</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="pt-24 pb-12 px-6">
+        <div class="max-w-4xl mx-auto">
+            <!-- Timer Bar -->
+            <div class="w-full h-2 bg-white/10 rounded-full mb-6 overflow-hidden">
+                <div id="timerBar" class="timer-bar h-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500" style="width: 100%"></div>
+            </div>
+
+            <!-- Question Counter -->
+            <div class="text-center mb-4">
+                <span class="text-white/60">Question</span>
+                <span id="questionNum" class="font-bold text-xl mx-2">1</span>
+                <span class="glass px-3 py-1 rounded-full text-sm" id="difficultyBadge">MEDIUM</span>
+            </div>
+
+            <!-- Image/3D Viewer Container -->
+            <div id="gameContainer" class="glass rounded-3xl p-6 mb-6">
+                <!-- 3D Viewer -->
+                <div id="viewer3d" class="bg-black/30 rounded-2xl mb-4"></div>
+
+                <!-- Zoom Controls -->
+                <div class="flex justify-center gap-4 mb-4">
+                    <button id="zoomIn" class="glass px-4 py-2 rounded-full hover:bg-white/10">🔍+ Zoom In</button>
+                    <button id="zoomOut" class="glass px-4 py-2 rounded-full hover:bg-white/10">🔍- Zoom Out</button>
+                    <button id="rotate" class="glass px-4 py-2 rounded-full hover:bg-white/10">🔄 Rotate</button>
+                    <button id="hintBtn" class="glass px-4 py-2 rounded-full hover:bg-white/10 text-yellow-400">
+                        💡 Hint (-5 pts)
+                    </button>
+                </div>
+
+                <!-- Hint Display -->
+                <div id="hintBox" class="hidden glass rounded-xl p-4 mb-4 border border-yellow-400/30">
+                    <p class="text-yellow-400" id="hintText"></p>
+                </div>
+            </div>
+
+            <!-- Confidence Slider -->
+            <div class="glass rounded-2xl p-6 mb-6">
+                <label class="block text-center mb-4">
+                    <span class="text-white/60">How confident are you?</span>
+                    <span id="confidenceValue" class="font-bold text-yellow-400 ml-2">50%</span>
+                </label>
+                <input type="range" id="confidenceSlider" min="0" max="100" value="50" 
+                       class="confidence-slider w-full h-2 bg-white/20 rounded-full appearance-none cursor-pointer">
+                <div class="flex justify-between text-sm text-white/40 mt-2">
+                    <span>Just Guessing</span>
+                    <span>Absolutely Sure</span>
+                </div>
+            </div>
+
+            <!-- Answer Buttons -->
+            <div class="grid grid-cols-2 gap-6">
+                <button id="realBtn" class="glass rounded-2xl p-8 text-center hover:bg-green-500/20 
+                                           transition transform hover:scale-105 border-2 border-transparent hover:border-green-400">
+                    <div class="text-6xl mb-4">👤</div>
+                    <div class="text-2xl font-bold">REAL HUMAN</div>
+                    <div class="text-white/60 mt-2">This is a real person</div>
+                </button>
+                <button id="aiBtn" class="glass rounded-2xl p-8 text-center hover:bg-purple-500/20 
+                                         transition transform hover:scale-105 border-2 border-transparent hover:border-purple-400">
+                    <div class="text-6xl mb-4">🤖</div>
+                    <div class="text-2xl font-bold">AI GENERATED</div>
+                    <div class="text-white/60 mt-2">This is AI-made</div>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="glass rounded-3xl p-8 max-w-md w-full mx-4 text-center">
+            <div id="resultIcon" class="text-8xl mb-4"></div>
+            <h2 id="resultTitle" class="text-3xl font-bold mb-4"></h2>
+            <p id="resultMessage" class="text-white/70 mb-6"></p>
+
+            <div class="glass rounded-xl p-4 mb-6">
+                <div class="flex justify-between mb-2">
+                    <span class="text-white/60">Points Earned</span>
+                    <span id="pointsEarned" class="font-bold text-yellow-400">+0</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-white/60">XP Gained</span>
+                    <span id="xpGained" class="font-bold text-green-400">+0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-white/60">Current Streak</span>
+                    <span id="resultStreak" class="font-bold">0</span>
+                </div>
+            </div>
+
+            <!-- Achievement Popup -->
+            <div id="achievementBox" class="hidden glass rounded-xl p-4 mb-6 border border-yellow-400">
+                <div class="text-2xl mb-2">🏆 Achievement Unlocked!</div>
+                <div id="achievementName" class="font-bold text-yellow-400"></div>
+                <div id="achievementDesc" class="text-sm text-white/60"></div>
+            </div>
+
+            <button id="nextBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 
+                                        py-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
+                Next Question →
+            </button>
+        </div>
+    </div>
+
+    <!-- Level Up Modal -->
+    <div id="levelUpModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="glass rounded-3xl p-8 max-w-md w-full mx-4 text-center">
+            <div class="text-8xl mb-4">🎉</div>
+            <h2 class="text-4xl font-bold mb-4 text-yellow-400">LEVEL UP!</h2>
+            <p class="text-6xl font-black mb-6" id="newLevelDisplay">2</p>
+            <p class="text-white/70 mb-6">You've reached a new level! Keep going to unlock more rewards.</p>
+            <button id="closeLevelUp" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold">
+                Awesome! 🚀
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let currentQuestion = null;
+        let questionNum = 0;
+        let timerInterval = null;
+        let timeRemaining = 30;
+        let startTime = null;
+        let usedHint = false;
+        let autoRotate = true;
+
+        // Three.js Setup
+        let scene, camera, renderer, model;
+
+        function init3DViewer() {
+            const container = document.getElementById('viewer3d');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 1, 3);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            backLight.position.set(-5, 5, -5);
+            scene.add(backLight);
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (model && autoRotate) {
+                model.rotation.y += 0.005;
+            }
+            renderer.render(scene, camera);
+        }
+
+        function loadModel(path) {
+            // Remove existing model
+            if (model) {
+                scene.remove(model);
+            }
+
+            const loader = new THREE.GLTFLoader();
+            loader.load(path, (gltf) => {
+                model = gltf.scene;
+
+                // Center and scale model
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+
+                model.position.sub(center);
+                const maxDim = Math.max(size.x, size.y, size.z);
+                model.scale.multiplyScalar(2 / maxDim);
+
+                scene.add(model);
+            }, undefined, (error) => {
+                console.error('Error loading model:', error);
+                // Show placeholder
+                const geometry = new THREE.BoxGeometry(1, 2, 0.5);
+                const material = new THREE.MeshStandardMaterial({ color: 0x667eea });
+                model = new THREE.Mesh(geometry, material);
+                scene.add(model);
+            });
+        }
+
+        // Load new question
+        async function loadQuestion() {
+            usedHint = false;
+            document.getElementById('hintBox').classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/question');
+                currentQuestion = await response.json();
+
+                questionNum++;
+                document.getElementById('questionNum').textContent = questionNum;
+                document.getElementById('difficultyBadge').textContent = currentQuestion.difficulty.toUpperCase();
+
+                // Set difficulty color
+                const badge = document.getElementById('difficultyBadge');
+                const colors = {
+                    'easy': 'bg-green-500/30 text-green-400',
+                    'medium': 'bg-yellow-500/30 text-yellow-400',
+                    'hard': 'bg-orange-500/30 text-orange-400',
+                    'expert': 'bg-red-500/30 text-red-400',
+                    'impossible': 'bg-purple-500/30 text-purple-400'
+                };
+                badge.className = `px-3 py-1 rounded-full text-sm ${colors[currentQuestion.difficulty] || ''}`;
+
+                // Load 3D model
+                loadModel(currentQuestion.image_path);
+
+                // Start timer
+                startTimer(currentQuestion.time_limit);
+                startTime = Date.now();
+
+            } catch (error) {
+                console.error('Error loading question:', error);
+            }
+        }
+
+        function startTimer(seconds) {
+            timeRemaining = seconds;
+            const timerBar = document.getElementById('timerBar');
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                timeRemaining -= 0.1;
+                const percent = (timeRemaining / seconds) * 100;
+                timerBar.style.width = `${Math.max(0, percent)}%`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    submitAnswer(null); // Time's up
+                }
+            }, 100);
+        }
+
+        // Submit answer
+        async function submitAnswer(isAI) {
+            if (timerInterval) clearInterval(timerInterval);
+
+            const timeTaken = (Date.now() - startTime) / 1000;
+            const confidence = parseInt(document.getElementById('confidenceSlider').value);
+
+            try {
+                const response = await fetch('/api/answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        is_ai: isAI,
+                        time_taken: timeTaken,
+                        confidence: confidence,
+                        used_hint: usedHint
+                    })
+                });
+
+                const result = await response.json();
+                showResult(result);
+                updateStats();
+
+                // Check for level up
+                if (result.leveled_up) {
+                    setTimeout(() => showLevelUp(result.new_level), 500);
+                }
+
+            } catch (error) {
+                console.error('Error submitting answer:', error);
+            }
+        }
+
+        function showResult(result) {
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const message = document.getElementById('resultMessage');
+
+            if (result.correct) {
+                icon.textContent = '✅';
+                title.textContent = 'Correct!';
+                title.className = 'text-3xl font-bold mb-4 text-green-400';
+                message.textContent = result.actual_is_ai ? 
+                    'You correctly identified this as AI-generated!' : 
+                    'You correctly identified this as a real human!';
+                document.getElementById('gameContainer').classList.add('correct-flash');
+            } else {
+                icon.textContent = '❌';
+                title.textContent = 'Wrong!';
+                title.className = 'text-3xl font-bold mb-4 text-red-400';
+                message.textContent = result.actual_is_ai ? 
+                    'This was actually AI-generated.' : 
+                    'This was actually a real human.';
+                document.getElementById('gameContainer').classList.add('wrong-flash');
+            }
+
+            document.getElementById('pointsEarned').textContent = `+${result.points_earned}`;
+            document.getElementById('xpGained').textContent = `+${result.xp_gained}`;
+            document.getElementById('resultStreak').textContent = result.streak;
+
+            // Show achievements
+            if (result.new_achievements && result.new_achievements.length > 0) {
+                const ach = result.new_achievements[0];
+                document.getElementById('achievementBox').classList.remove('hidden');
+                document.getElementById('achievementName').textContent = `${ach.icon} ${ach.name}`;
+                document.getElementById('achievementDesc').textContent = ach.description;
+            } else {
+                document.getElementById('achievementBox').classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('gameContainer').classList.remove('correct-flash', 'wrong-flash');
+            }, 500);
+        }
+
+        function showLevelUp(level) {
+            document.getElementById('newLevelDisplay').textContent = level;
+            document.getElementById('levelUpModal').classList.remove('hidden');
+        }
+
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+
+                document.getElementById('totalPoints').textContent = stats.total_points.toLocaleString();
+                document.getElementById('currentStreak').textContent = stats.current_streak;
+                document.getElementById('accuracy').textContent = `${stats.accuracy}%`;
+                document.getElementById('userLevel').textContent = stats.level;
+
+                // Animate streak fire
+                if (stats.current_streak >= 5) {
+                    document.getElementById('streakIcon').classList.add('streak-fire');
+                } else {
+                    document.getElementById('streakIcon').classList.remove('streak-fire');
+                }
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        async function getHint() {
+            try {
+                const response = await fetch('/api/hint');
+                const data = await response.json();
+
+                document.getElementById('hintText').textContent = data.hint;
+                document.getElementById('hintBox').classList.remove('hidden');
+                usedHint = true;
+            } catch (error) {
+                console.error('Error getting hint:', error);
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('realBtn').addEventListener('click', () => submitAnswer(false));
+        document.getElementById('aiBtn').addEventListener('click', () => submitAnswer(true));
+        document.getElementById('hintBtn').addEventListener('click', getHint);
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            document.getElementById('resultModal').classList.add('hidden');
+            loadQuestion();
+        });
+
+        document.getElementById('closeLevelUp').addEventListener('click', () => {
+            document.getElementById('levelUpModal').classList.add('hidden');
+        });
+
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            camera.position.z = Math.max(1, camera.position.z - 0.5);
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            camera.position.z = Math.min(10, camera.position.z + 0.5);
+        });
+
+        document.getElementById('rotate').addEventListener('click', () => {
+            autoRotate = !autoRotate;
+        });
+
+        document.getElementById('confidenceSlider').addEventListener('input', (e) => {
+            document.getElementById('confidenceValue').textContent = `${e.target.value}%`;
+        });
+
+        // Initialize
+        init3DViewer();
+        updateStats();
+        loadQuestion();
+    </script>
+</body>
+</html>

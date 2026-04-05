@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Real or AI?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gold-glow { box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); }
+        .silver-glow { box-shadow: 0 0 30px rgba(192, 192, 192, 0.3); }
+        .bronze-glow { box-shadow: 0 0 30px rgba(205, 127, 50, 0.3); }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header -->
+    <header class="glass fixed top-0 w-full z-50 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <a href="/" class="flex items-center space-x-2">
+                <span class="text-2xl">🎭</span>
+                <span class="font-bold">Real or AI?</span>
+            </a>
+            <div class="flex items-center space-x-6">
+                <a href="/play" class="hover:text-yellow-300">🎮 Play</a>
+                <a href="/rewards" class="hover:text-yellow-300">🎁 Rewards</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-24 pb-12 px-6">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-bold text-center mb-2">🏆 Leaderboard</h1>
+            <p class="text-center text-white/60 mb-8">Top AI Detectives</p>
+
+            <!-- Top 3 Podium -->
+            <div class="flex justify-center items-end gap-4 mb-12">
+                <!-- 2nd Place -->
+                <div class="glass silver-glow rounded-2xl p-6 text-center w-40">
+                    <div class="text-4xl mb-2">🥈</div>
+                    <div id="rank2Name" class="font-bold truncate">-</div>
+                    <div id="rank2Points" class="text-2xl font-black text-gray-300">0</div>
+                    <div class="text-xs text-white/50">points</div>
+                </div>
+                <!-- 1st Place -->
+                <div class="glass gold-glow rounded-2xl p-8 text-center w-48 -mt-8">
+                    <div class="text-6xl mb-2">👑</div>
+                    <div id="rank1Name" class="font-bold text-lg truncate">-</div>
+                    <div id="rank1Points" class="text-3xl font-black text-yellow-400">0</div>
+                    <div class="text-xs text-white/50">points</div>
+                </div>
+                <!-- 3rd Place -->
+                <div class="glass bronze-glow rounded-2xl p-6 text-center w-40">
+                    <div class="text-4xl mb-2">🥉</div>
+                    <div id="rank3Name" class="font-bold truncate">-</div>
+                    <div id="rank3Points" class="text-2xl font-black text-amber-600">0</div>
+                    <div class="text-xs text-white/50">points</div>
+                </div>
+            </div>
+
+            <!-- Full Leaderboard -->
+            <div class="glass rounded-2xl overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="px-6 py-4 text-left">Rank</th>
+                            <th class="px-6 py-4 text-left">Player</th>
+                            <th class="px-6 py-4 text-center">Level</th>
+                            <th class="px-6 py-4 text-center">Accuracy</th>
+                            <th class="px-6 py-4 text-center">Best Streak</th>
+                            <th class="px-6 py-4 text-right">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch('/api/leaderboard?limit=100');
+                const data = await response.json();
+
+                // Update podium
+                if (data.leaderboard.length >= 1) {
+                    document.getElementById('rank1Name').textContent = data.leaderboard[0].username;
+                    document.getElementById('rank1Points').textContent = data.leaderboard[0].points.toLocaleString();
+                }
+                if (data.leaderboard.length >= 2) {
+                    document.getElementById('rank2Name').textContent = data.leaderboard[1].username;
+                    document.getElementById('rank2Points').textContent = data.leaderboard[1].points.toLocaleString();
+                }
+                if (data.leaderboard.length >= 3) {
+                    document.getElementById('rank3Name').textContent = data.leaderboard[2].username;
+                    document.getElementById('rank3Points').textContent = data.leaderboard[2].points.toLocaleString();
+                }
+
+                // Update table
+                const tbody = document.getElementById('leaderboardBody');
+                tbody.innerHTML = data.leaderboard.map((player, i) => `
+                    <tr class="border-t border-white/5 hover:bg-white/5">
+                        <td class="px-6 py-4">
+                            ${i < 3 ? ['🥇','🥈','🥉'][i] : `#${player.rank}`}
+                        </td>
+                        <td class="px-6 py-4 font-medium">${player.username}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="bg-purple-500/30 px-2 py-1 rounded">Lv.${player.level}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">${player.accuracy}%</td>
+                        <td class="px-6 py-4 text-center">🔥 ${player.streak}</td>
+                        <td class="px-6 py-4 text-right font-bold text-yellow-400">
+                            ${player.points.toLocaleString()}
+                        </td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+            }
+        }
+
+        loadLeaderboard();
+        setInterval(loadLeaderboard, 30000); // Refresh every 30s
+    </script>
+</body>
+</html>

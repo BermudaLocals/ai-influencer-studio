@@ -1,0 +1,21 @@
+{
+  "f1b9caf5-ac68-4d6b-9191-f855bbed7549": {
+    "id": "f1b9caf5-ac68-4d6b-9191-f855bbed7549",
+    "email": "test@example.com",
+    "username": "TestUser",
+    "platform_ids": {},
+    "credits": 100,
+    "tokens": 10,
+    "cash_balance": 0.0,
+    "subscription_tier": "free",
+    "subscription_expires": "",
+    "total_ai_generated": 0,
+    "total_voices_cloned": 0,
+    "total_videos_created": 0,
+    "survey_accuracy": 0.0,
+    "survey_points": 0,
+    "achievements": [],
+    "created_at": "2026-01-29T05:33:18.286698",
+    "last_active": "2026-01-29T05:33:18.286739"
+  }
+}
