@@ -23,17 +23,18 @@ function safeRoute(routePath) {
 }
 
 // ── ROUTES ─────────────────────────────────────────────────────
-app.use('/api/tools',     safeRoute('./routes/tools'));
-app.use('/api/pipeline',  safeRoute('./routes/pipeline'));
-app.use('/api/admin',     safeRoute('./routes/admin'));
-app.use('/api/affiliate', safeRoute('./routes/affiliate'));
-app.use('/api/creators',  safeRoute('./routes/creators'));
-app.use('/api/marketing', safeRoute('./routes/marketing'));
-app.use('/api/auth',     safeRoute('./routes/auth'));
-app.use('/api/tokens',   safeRoute('./routes/tokens'));
-app.use('/api/generate', safeRoute('./routes/generate'));
-app.use('/api/claude',   safeRoute('./routes/claude'));
-
+// ── ROUTES ─────────────────────────────────────────────────────
+app.use('/api/tools',       safeRoute('./routes/tools'));
+app.use('/api/pipeline',    safeRoute('./routes/pipeline'));
+app.use('/api/admin',       safeRoute('./routes/admin'));
+app.use('/api/affiliate',   safeRoute('./routes/affiliate'));
+app.use('/api/creators',    safeRoute('./routes/creators'));
+app.use('/api/marketing',   safeRoute('./routes/marketing'));
+app.use('/api/auth',        safeRoute('./routes/auth'));
+app.use('/api/tokens',      safeRoute('./routes/tokens'));
+app.use('/api/generate',    safeRoute('./routes/generate'));
+app.use('/api/claude',      safeRoute('./routes/claude'));
+app.use('/api/art-studio',  safeRoute('./routes/artStudio')); // AI Art Studio - OpenArt style
 // ── LOCAL STORAGE ──────────────────────────────────────────────
 try {
   const { getLocalStoragePath } = require('./services/storageEngine');
@@ -45,7 +46,7 @@ app.get('/api/health', async (req, res) => {
   res.json({
     status: 'live',
     time:   new Date().toISOString(),
-    routes: ['tools','pipeline','admin','affiliate','creators','marketing','auth','tokens','generate'],
+    routes: ['tools','pipeline','admin','affiliate','creators','marketing','auth','tokens','generate','art-studio'],
     env: {
       replicate:  !!process.env.REPLICATE_API_TOKEN,
       openrouter: !!process.env.OPENROUTER_API_KEY,

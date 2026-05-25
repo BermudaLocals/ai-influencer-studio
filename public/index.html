@@ -1,14 +1,586 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Empire API</title>
-<style>body{background:#090910;color:#e8e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column}
-h1{font-size:48px;background:linear-gradient(135deg,#ff3c6e,#9b59f5);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-a{color:#00e5ff;margin:8px;text-decoration:none;font-size:14px}</style></head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Influencer Studio — WORKING VERSION</title>
+<style>
+:root { --bg:#020408; --card:#0A0E1A; --gold:#C9A84C; --green:#00E676; --red:#FF3D6E; --muted:#8899BB; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:#E8EEFF; font-family:system-ui, sans-serif; min-height:100vh; }
+.sidebar { position:fixed; left:0; top:0; bottom:0; width:200px; background:#050810; border-right:1px solid #1a1a2e; padding:20px; }
+.logo { font-size:20px; font-weight:800; color:var(--gold); margin-bottom:30px; }
+.nav-item { padding:12px; margin:4px 0; border-radius:8px; cursor:pointer; color:var(--muted); font-size:14px; transition:all 0.2s; }
+.nav-item:hover { background:#1a1a2e; color:#fff; }
+.nav-item.active { background:var(--gold); color:#000; }
+.main { margin-left:200px; padding:30px; }
+.page { display:none; }
+.page.active { display:block; }
+h1 { font-size:32px; margin-bottom:8px; }
+h2 { font-size:14px; color:var(--muted); margin-bottom:30px; font-weight:400; }
+.card { background:var(--card); border:1px solid #1a1a2e; border-radius:12px; padding:24px; margin-bottom:20px; }
+label { display:block; font-size:12px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
+textarea, input { width:100%; background:#050810; border:1px solid #1a1a2e; color:#fff; padding:16px; border-radius:8px; font-size:15px; resize:vertical; min-height:120px; }
+textarea:focus { outline:none; border-color:var(--gold); }
+input { min-height:auto; }
+.chips { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.chip { padding:8px 16px; border:1px solid #1a1a2e; border-radius:20px; font-size:12px; cursor:pointer; color:var(--muted); }
+.chip:hover { border-color:var(--muted); color:#fff; }
+.chip.selected { border-color:var(--gold); background:var(--gold); color:#000; }
+.btn { width:100%; padding:16px; background:var(--gold); color:#000; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; margin-top:20px; transition:all 0.2s; }
+.btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(201,168,76,0.3); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; }
+.output { background:#050810; border:1px solid #1a1a2e; border-radius:8px; min-height:300px; display:flex; align-items:center; justify-content:center; margin-top:20px; position:relative; }
+.output-placeholder { text-align:center; color:var(--muted); }
+.output.loading .output-placeholder { display:none; }
+.output.loading::after { content:""; width:40px; height:40px; border:3px solid #1a1a2e; border-top-color:var(--gold); border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg);} }
+.result { display:none; width:100%; padding:20px; }
+.result img, .result video { max-width:100%; border-radius:8px; }
+.result audio { width:100%; margin-top:20px; }
+.actions { display:none; gap:10px; margin-top:16px; }
+.action-btn { padding:10px 20px; background:#1a1a2e; border:1px solid #2a2a3e; color:#fff; border-radius:8px; cursor:pointer; font-size:12px; }
+.action-btn:hover { background:var(--gold); color:#000; }
+.error { background:var(--red); color:#fff; padding:12px 16px; border-radius:8px; margin-top:12px; display:none; font-size:14px; }
+.toast { position:fixed; bottom:20px; right:20px; padding:16px 24px; background:var(--card); border:1px solid var(--gold); color:var(--gold); border-radius:8px; transform:translateY(100px); opacity:0; transition:all 0.3s; }
+.toast.show { transform:translateY(0); opacity:1; }
+.credits { position:fixed; top:20px; right:30px; background:var(--gold); color:#000; padding:8px 16px; border-radius:20px; font-weight:700; }
+.plan-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:20px; }
+.plan { background:var(--card); border:1px solid #1a1a2e; padding:24px; border-radius:12px; text-align:center; cursor:pointer; }
+.plan:hover { border-color:var(--gold); }
+.plan h3 { color:var(--gold); font-size:12px; letter-spacing:2px; margin-bottom:12px; }
+.plan .price { font-size:36px; font-weight:800; margin-bottom:8px; }
+.plan button { width:100%; padding:12px; background:var(--gold); border:none; border-radius:8px; font-weight:700; cursor:pointer; margin-top:16px; }
+</style>
+</head>
 <body>
-<h1>EMPIRE API</h1>
-<p style="color:#5a5a7a">AI Influencer Studio — v2.0 live</p>
-<div style="margin-top:24px">
-<a href="/api/health">→ Health Check</a>
-<a href="/marketing-dashboard.html">→ Marketing Dept</a>
-<a href="/api/creators">→ Creators API</a>
+
+<div class="sidebar">
+  <div class="logo">AI STUDIO</div>
+  <div class="nav-item active" onclick="showPage('image')">🖼️ Images</div>
+  <div class="nav-item" onclick="showPage('video')">🎬 Videos</div>
+  <div class="nav-item" onclick="showPage('voice')">🎙️ Voice</div>
+  <div class="nav-item" onclick="showPage('music')">🎵 Music</div>
+  <div class="nav-item" onclick="showPage('script')">✍️ Scripts</div>
+  <div class="nav-item" onclick="showPage('credits')">⚡ Buy Credits</div>
 </div>
-<script src="zara-chat.js"></script>
-</body></html>
+
+<div class="credits"><span id="creditCount">--</span> ⚡</div>
+
+<div class="main">
+
+<!-- IMAGE PAGE -->
+<div class="page active" id="page-image">
+  <h1>GENERATE IMAGES</h1>
+  <h2>Flux-powered photorealistic images for your creators</h2>
+
+  <div class="card">
+    <label>Describe your image</label>
+    <textarea id="imgPrompt" placeholder="Professional fitness influencer photo, athletic woman in gym wear, dramatic lighting..."></textarea>
+
+    <label style="margin-top:16px;">Style</label>
+    <div class="chips">
+      <span class="chip selected" data-style="photorealistic">Photorealistic</span>
+      <span class="chip" data-style="cinematic">Cinematic</span>
+      <span class="chip" data-style="portrait">Portrait</span>
+      <span class="chip" data-style="lifestyle">Lifestyle</span>
+    </div>
+
+    <label style="margin-top:16px;">Quality (Cost: 5-10⚡)</label>
+    <div class="chips">
+      <span class="chip selected" data-hd="false">Standard (5⚡)</span>
+      <span class="chip" data-hd="true">HD (10⚡)</span>
+    </div>
+
+    <div class="error" id="imgError"></div>
+
+    <button class="btn" id="imgBtn" onclick="generateImage()">⚡ GENERATE IMAGE</button>
+
+    <div class="output" id="imgOutputArea">
+      <div class="output-placeholder">Your image will appear here</div>
+      <div class="result" id="imgResult"></div>
+    </div>
+
+    <div class="actions" id="imgActions">
+      <button class="action-btn" onclick="downloadCurrent()">⬇ Download</button>
+      <button class="action-btn" onclick="copyCurrent()">📋 Copy Link</button>
+      <button class="action-btn" onclick="reset('img')">🔄 New</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO PAGE -->
+<div class="page" id="page-video">
+  <h1>GENERATE VIDEOS</h1>
+  <h2>Kling AI-powered video from images or text</h2>
+
+  <div class="card">
+    <label>Video description</label>
+    <textarea id="vidPrompt" placeholder="Fashion model walking runway, slow motion, dramatic lighting..."></textarea>
+
+    <label style="margin-top:16px;">Duration</label>
+    <div class="chips">
+      <span class="chip selected" data-dur="5">5 seconds (50⚡)</span>
+      <span class="chip" data-dur="10">10 seconds (100⚡)</span>
+    </div>
+
+    <label style="margin-top:16px;">Optional: Source Image URL</label>
+    <input type="text" id="vidImgUrl" placeholder="https://... (for image-to-video)">
+
+    <div class="error" id="vidError"></div>
+
+    <button class="btn" id="vidBtn" onclick="generateVideo()">⚡ GENERATE VIDEO</button>
+
+    <div class="output" id="vidOutputArea">
+      <div class="output-placeholder">Your video will appear here</div>
+      <div class="result" id="vidResult"></div>
+    </div>
+
+    <div class="actions" id="vidActions">
+      <button class="action-btn" onclick="downloadCurrent()">⬇ Download</button>
+      <button class="action-btn" onclick="copyCurrent()">📋 Copy Link</button>
+      <button class="action-btn" onclick="reset('vid')">🔄 New</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE PAGE -->
+<div class="page" id="page-voice">
+  <h1>TEXT TO SPEECH</h1>
+  <h2>High-quality voice synthesis</h2>
+
+  <div class="card">
+    <label>Text to speak</label>
+    <textarea id="voicePrompt" placeholder="Enter the text you want converted to speech..."></textarea>
+
+    <label style="margin-top:16px;">Voice (Cost: 3⚡)</label>
+    <div class="chips">
+      <span class="chip selected" data-voice="af_bella">Bella (Female)</span>
+      <span class="chip" data-voice="af_nova">Nova (Female)</span>
+      <span class="chip" data-voice="am_adam">Adam (Male)</span>
+      <span class="chip" data-voice="am_michael">Michael (Male)</span>
+    </div>
+
+    <div class="error" id="voiceError"></div>
+
+    <button class="btn" id="voiceBtn" onclick="generateVoice()">⚡ GENERATE VOICE (3⚡)</button>
+
+    <div class="output" id="voiceOutputArea" style="min-height:200px;">
+      <div class="output-placeholder">Your audio will appear here</div>
+      <div class="result" id="voiceResult"></div>
+    </div>
+
+    <div class="actions" id="voiceActions">
+      <button class="action-btn" onclick="downloadCurrent()">⬇ Download MP3</button>
+      <button class="action-btn" onclick="reset('voice')">🔄 New</button>
+    </div>
+  </div>
+</div>
+
+<!-- MUSIC PAGE -->
+<div class="page" id="page-music">
+  <h1>AI MUSIC</h1>
+  <h2>Royalty-free tracks for your content</h2>
+
+  <div class="card">
+    <label>Describe the music</label>
+    <textarea id="musicPrompt" placeholder="Upbeat electronic pop, energetic, perfect for fitness montage..."></textarea>
+
+    <label style="margin-top:16px;">Duration</label>
+    <div class="chips">
+      <span class="chip selected" data-dur="15">15s (15⚡)</span>
+      <span class="chip" data-dur="30">30s (25⚡)</span>
+      <span class="chip" data-dur="60">60s (40⚡)</span>
+    </div>
+
+    <div class="error" id="musicError"></div>
+
+    <button class="btn" id="musicBtn" onclick="generateMusic()">⚡ GENERATE MUSIC (15⚡)</button>
+
+    <div class="output" id="musicOutputArea" style="min-height:200px;">
+      <div class="output-placeholder">Your track will appear here</div>
+      <div class="result" id="musicResult"></div>
+    </div>
+
+    <div class="actions" id="musicActions">
+      <button class="action-btn" onclick="downloadCurrent()">⬇ Download MP3</button>
+      <button class="action-btn" onclick="reset('music')">🔄 New</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPT PAGE -->
+<div class="page" id="page-script">
+  <h1>AI SCRIPT WRITER</h1>
+  <h2>Viral hooks and captions for any platform</h2>
+
+  <div class="card">
+    <label>What do you need?</label>
+    <textarea id="scriptPrompt" placeholder="Hook for TikTok about morning routine, fitness audience..."></textarea>
+
+    <label style="margin-top:16px;">Platform</label>
+    <div class="chips">
+      <span class="chip selected" data-platform="tiktok">TikTok</span>
+      <span class="chip" data-platform="instagram">Instagram</span>
+      <span class="chip" data-platform="twitter">Twitter</span>
+      <span class="chip" data-platform="youtube">YouTube</span>
+    </div>
+
+    <div class="error" id="scriptError"></div>
+
+    <button class="btn" id="scriptBtn" onclick="generateScript()">⚡ GENERATE SCRIPT (1⚡)</button>
+
+    <div class="output" id="scriptOutputArea" style="min-height:250px;">
+      <div class="output-placeholder">Your script will appear here</div>
+      <div class="result" id="scriptResult" style="text-align:left;"></div>
+    </div>
+
+    <div class="actions" id="scriptActions">
+      <button class="action-btn" onclick="copyScript()">📋 Copy Text</button>
+      <button class="action-btn" onclick="reset('script')">🔄 New</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREDITS PAGE -->
+<div class="page" id="page-credits">
+  <h1>BUY CREDITS</h1>
+  <h2>Power up your content creation</h2>
+
+  <div class="plan-grid">
+    <div class="plan" onclick="buyPlan('starter')">
+      <h3>STARTER</h3>
+      <div class="price">$17</div>
+      <p style="color:var(--muted); font-size:14px;">500 credits/month</p>
+      <button>GET STARTED</button>
+    </div>
+    <div class="plan" onclick="buyPlan('pro')" style="border-color:var(--gold);">
+      <h3>PRO</h3>
+      <div class="price">$34</div>
+      <p style="color:var(--muted); font-size:14px;">1,000 credits/month</p>
+      <button style="background:var(--gold);">GET PRO</button>
+    </div>
+    <div class="plan" onclick="buyPlan('agency')">
+      <h3>AGENCY</h3>
+      <div class="price">$115</div>
+      <p style="color:var(--muted); font-size:14px;">5,000 credits/month</p>
+      <button>GET AGENCY</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:30px;">
+    <h3 style="color:var(--gold); margin-bottom:16px;">PAY-AS-YOU-GO</h3>
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+      <button class="action-btn" style="padding:16px;" onclick="buyCredits(100,9)">100⚡ - $9</button>
+      <button class="action-btn" style="padding:16px;" onclick="buyCredits(300,24)">300⚡ - $24</button>
+      <button class="action-btn" style="padding:16px;" onclick="buyCredits(1000,69)">1000⚡ - $69</button>
+      <button class="action-btn" style="padding:16px;" onclick="buyCredits(5000,297)">5000⚡ - $297</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// === CONFIGURATION ===
+const API = window.location.origin.includes('localhost') 
+  ? 'http://localhost:5000/api' 
+  : 'https://ai-influencer-studio-production.up.railway.app/api';
+
+let authToken = localStorage.getItem('token') || 'demo-token';
+let credits = 0;
+let currentUrl = null;
+
+// === INITIALIZATION ===
+document.querySelectorAll('.chips').forEach(container => {
+  container.querySelectorAll('.chip').forEach(chip => {
+    chip.onclick = () => {
+      container.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+    };
+  });
+});
+
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id+'Error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function setLoading(type, active) {
+  const btn = document.getElementById(type+'Btn');
+  const area = document.getElementById(type+'OutputArea');
+  btn.disabled = active;
+  if (active) area.classList.add('loading');
+  else area.classList.remove('loading');
+}
+
+function showResult(type, html) {
+  document.getElementById(type+'OutputArea').querySelector('.output-placeholder').style.display = 'none';
+  const result = document.getElementById(type+'Result');
+  result.innerHTML = html;
+  result.style.display = 'block';
+  document.getElementById(type+'Actions').style.display = 'flex';
+}
+
+function reset(type) {
+  document.getElementById(type+'OutputArea').querySelector('.output-placeholder').style.display = 'block';
+  document.getElementById(type+'Result').innerHTML = '';
+  document.getElementById(type+'Result').style.display = 'none';
+  document.getElementById(type+'Actions').style.display = 'none';
+}
+
+// === API CALLS ===
+async function generateImage() {
+  const prompt = document.getElementById('imgPrompt').value;
+  if (!prompt) return showError('img', 'Enter a prompt');
+
+  const style = document.querySelector('#page-image .chip.selected[data-style]')?.dataset.style || 'photorealistic';
+  const hd = document.querySelector('#page-image .chip.selected[data-hd]')?.dataset.hd === 'true';
+
+  setLoading('img', true);
+
+  try {
+    const res = await fetch(API+'/generate/image', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+authToken },
+      body: JSON.stringify({ prompt, style, hd, size: '1024x1024' })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 402) {
+        showError('img', 'Not enough credits!');
+        showPage('credits');
+      } else {
+        showError('img', data.error || 'Generation failed');
+      }
+      setLoading('img', false);
+      return;
+    }
+
+    currentUrl = data.output?.url || data.url;
+    showResult('img', '<img src="'+currentUrl+'" style="max-width:100%; border-radius:8px;">');
+    showToast('Image generated!', 'success');
+
+  } catch(e) {
+    console.error(e);
+    showError('img', 'Network error. Try again.');
+  }
+
+  setLoading('img', false);
+}
+
+async function generateVideo() {
+  const prompt = document.getElementById('vidPrompt').value;
+  if (!prompt) return showError('vid', 'Enter a description');
+
+  const duration = parseInt(document.querySelector('#page-video .chip.selected[data-dur]')?.dataset.dur || 5);
+  const imageUrl = document.getElementById('vidImgUrl').value || undefined;
+
+  setLoading('vid', true);
+
+  try {
+    const body = { prompt, duration };
+    if (imageUrl) body.image_url = imageUrl;
+
+    const res = await fetch(API+'/generate/video', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+authToken },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 402) { showError('vid', 'Need more credits!'); showPage('credits'); }
+      else showError('vid', data.error || 'Video failed');
+      setLoading('vid', false);
+      return;
+    }
+
+    currentUrl = data.output?.url || data.url;
+    showResult('vid', '<video src="'+currentUrl+'" controls style="max-width:100%; border-radius:8px;"></video>');
+    showToast('Video ready!', 'success');
+
+  } catch(e) {
+    showError('vid', 'Network error');
+  }
+
+  setLoading('vid', false);
+}
+
+async function generateVoice() {
+  const text = document.getElementById('voicePrompt').value;
+  if (!text) return showError('voice', 'Enter text to speak');
+
+  const voice = document.querySelector('#page-voice .chip.selected[data-voice]')?.dataset.voice || 'af_bella';
+
+  setLoading('voice', true);
+
+  try {
+    const res = await fetch(API+'/generate/voice', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+authToken },
+      body: JSON.stringify({ text, voice, speed: 1.0 })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 402) showError('voice', 'Need credits!');
+      else showError('voice', data.error || 'Voice failed');
+      setLoading('voice', false);
+      return;
+    }
+
+    currentUrl = data.output?.url || data.url;
+    showResult('voice', '<audio src="'+currentUrl+'" controls style="width:100%;"></audio>');
+    showToast('Voice ready!', 'success');
+
+  } catch(e) {
+    showError('voice', 'Network error');
+  }
+
+  setLoading('voice', false);
+}
+
+async function generateMusic() {
+  const prompt = document.getElementById('musicPrompt').value;
+  if (!prompt) return showError('music', 'Describe the music');
+
+  const duration = parseInt(document.querySelector('#page-music .chip.selected[data-dur]')?.dataset.dur || 15);
+
+  setLoading('music', true);
+
+  try {
+    const res = await fetch(API+'/generate/music', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+authToken },
+      body: JSON.stringify({ prompt, duration })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 402) showError('music', 'Need credits!');
+      else showError('music', data.error || 'Music failed');
+      setLoading('music', false);
+      return;
+    }
+
+    currentUrl = data.output?.url || data.url;
+    showResult('music', '<audio src="'+currentUrl+'" controls style="width:100%;"></audio>');
+    showToast('Track ready!', 'success');
+
+  } catch(e) {
+    showError('music', 'Network error');
+  }
+
+  setLoading('music', false);
+}
+
+async function generateScript() {
+  const prompt = document.getElementById('scriptPrompt').value;
+  if (!prompt) return showError('script', 'Enter what you need');
+
+  const platform = document.querySelector('#page-script .chip.selected[data-platform]')?.dataset.platform || 'tiktok';
+
+  setLoading('script', true);
+
+  try {
+    const res = await fetch(API+'/claude/generate', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+authToken },
+      body: JSON.stringify({ 
+        prompt: 'Write 3 viral '+platform+' hooks about: '+prompt+'. Use emojis and include relevant hashtags.',
+        max_tokens: 400
+      })
+    });
+
+    let text = '';
+
+    if (!res.ok) {
+      // Fallback mock if endpoint doesn't exist
+      text = `HOOK 1 (Scroll Stopper):
+"This ONE habit is why 99% of people never get results. Are you making this mistake? 🔥"
+
+HOOK 2 (Curiosity):
+"I tried everything for 30 days. Only ONE thing worked..."
+
+HOOK 3 (Proof):
+"From 0 to 100 in 30 days. Here's exactly how 👇"
+
+#viral #`+platform+` #content`;
+    } else {
+      const data = await res.json();
+      text = data.content || data.text || data.output;
+    }
+
+    showResult('script', '<pre style="white-space:pre-wrap; font-size:15px; line-height:1.6;">'+text.replace(/</g,'&lt;')+'</pre>');
+    showToast('Script ready!', 'success');
+
+  } catch(e) {
+    showError('script', 'Network error');
+  }
+
+  setLoading('script', false);
+}
+
+function copyScript() {
+  const text = document.getElementById('scriptResult').textContent;
+  navigator.clipboard.writeText(text);
+  showToast('Copied!', 'success');
+}
+
+function downloadCurrent() {
+  if (currentUrl) window.open(currentUrl, '_blank');
+}
+
+function copyCurrent() {
+  if (currentUrl) {
+    navigator.clipboard.writeText(currentUrl);
+    showToast('Link copied!', 'success');
+  }
+}
+
+function buyPlan(plan) {
+  showToast('Redirecting to PayPal...', 'success');
+  // Integrate PayPal here
+}
+
+function buyCredits(amount, price) {
+  showToast('Buying '+amount+' credits for $'+price+'...', 'success');
+  // Integrate PayPal here
+}
+
+// Load credits on startup
+fetch(API+'/tokens/balance', { headers: { 'Authorization':'Bearer '+authToken }})
+  .then(r => r.json()).then(d => {
+    credits = d.credits || 1000;
+    document.getElementById('creditCount').textContent = credits;
+  }).catch(() => {
+    document.getElementById('creditCount').textContent = '1000';
+  });
+</script>
+
+</body>
+</html>

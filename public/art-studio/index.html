@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Art Studio - OpenArt Style Image Generation</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #0a0a0f; }
+    .gradient-text { background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .glass-panel { background: rgba(20, 20, 30, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+    .neon-glow { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+    .masonry-grid { column-count: 4; column-gap: 16px; }
+    @media (max-width: 1280px) { .masonry-grid { column-count: 3; } }
+    @media (max-width: 1024px) { .masonry-grid { column-count: 2; } }
+    @media (max-width: 640px) { .masonry-grid { column-count: 1; } }
+    .masonry-item { break-inside: avoid; margin-bottom: 16px; }
+    .generation-card:hover .card-overlay { opacity: 1; }
+    .prompt-input:focus { box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
+    .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="text-white">
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+    const { Sparkles, Image, Grid3X3, Heart, FolderOpen, Settings, Zap, 
+            ChevronDown, Wand2, Upload, Download, Share2, Maximize2,
+            Copy, Trash2, Plus, CreditCard, Loader2, Clock, Check,
+            Layers, Palette, Sliders, Type, ImagePlus, Repeat } = window.lucide;
+    
+    // ── CONFIG ──────────────────────────────────────────────────────
+    const API_URL = '/api/art-studio';
+    
+    // ── UTILS ───────────────────────────────────────────────────────
+    const formatCredits = (credits) => credits?.toFixed(3) || '0.000';
+    const formatDate = (date) => new Date(date).toLocaleDateString();
+    
+    // ── MAIN APP ────────────────────────────────────────────────────
+    function App() {
+      const [user, setUser] = useState(null);
+      const [credits, setCredits] = useState(0);
+      const [activeTab, setActiveTab] = useState('generate');
+      const [loading, setLoading] = useState(true);
+      const [toast, setToast] = useState(null);
+      
+      useEffect(() => {
+        checkAuth();
+      }, []);
+      
+      const checkAuth = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setUser({ id: 'demo', username: 'Demo User' });
+          setCredits(10.000);
+          setLoading(false);
+          return;
+        }
+        try {
+          const res = await fetch(`${API_URL}/credits`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setCredits(data.credits);
+            setUser({ id: 'auth_user', username: 'User' });
+          }
+        } catch {(err) => {} }
+        setLoading(false);
+      };
+      
+      const showToast = (message, type = 'info') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+      };
+      
+      if (loading) return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>;
+      
+      return (
+        <div className="min-h-screen bg-[#0a0a0f] flex">
+          {/* SIDEBAR */}
+          <aside className="w-64 bg-[#12121a] border-r border-white/10 fixed h-full z-50">
+            <div className="p-6">
+              <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
+                <Sparkles className="w-6 h-6" />
+                Art Studio
+              </h1>
+            </div>
+            
+            <nav className="px-4 space-y-1">
+              <SidebarButton 
+                icon={<Wand2 size={20} />} 
+                label="Generate" 
+                active={activeTab === 'generate'} 
+                onClick={() => setActiveTab('generate')} 
+              />
+              <SidebarButton 
+                icon={<Grid3X3 size={20} />} 
+                label="My Gallery" 
+                active={activeTab === 'gallery'} 
+                onClick={() => setActiveTab('gallery')} 
+              />
+              <SidebarButton 
+                icon={<FolderOpen size={20} />} 
+                label="Collections" 
+                active={activeTab === 'collections'} 
+                onClick={() => setActiveTab('collections')} 
+              />
+              <SidebarButton 
+                icon={<Heart size={20} />} 
+                label="Community" 
+                active={activeTab === 'community'} 
+                onClick={() => setActiveTab('community')} 
+              />
+            </nav>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+              <div className="glass-panel rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400 flex items-center gap-1">
+                    <CreditCard size={14} /> Credits
+                  </span>
+                  <span className="text-sm font-semibold text-purple-400">{formatCredits(credits)}</span>
+                </div>
+                <button className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+                  Add Credits
+                </button>
+              </div>
+            </div>
+          </aside>
+          
+          {/* MAIN CONTENT */}
+          <main className="flex-1 ml-64">
+            {activeTab === 'generate' && <GeneratePage credits={credits} setCredits={setCredits} showToast={showToast} />}
+            {activeTab === 'gallery' && <GalleryPage showToast={showToast} />}
+            {activeTab === 'collections' && <CollectionsPage showToast={showToast} />}
+            {activeTab === 'community' && <CommunityPage showToast={showToast} />}
+          </main>
+          
+          {/* TOAST */}
+          {toast && (
+            <div className={`fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 ${
+              toast.type === 'success' ? 'bg-green-600' : 
+              toast.type === 'error' ? 'bg-red-600' : 'bg-purple-600'
+            }`}>
+              <span className="text-sm font-medium">{toast.message}</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    function SidebarButton({ icon, label, active, onClick }) {
+      return (
+        <button
+          onClick={onClick}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+            active 
+              ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30' 
+              : 'text-gray-400 hover:bg-white/5 hover:text-white'
+          }`}
+        >
+          {icon}
+          <span className="font-medium">{label}</span>
+        </button>
+      );
+    }
+    
+    // ── GENERATE PAGE ───────────────────────────────────────────────
+    function GeneratePage({ credits, setCredits, showToast }) {
+      const [models, setModels] = useState([]);
+      const [styles, setStyles] = useState([]);
+      const [selectedModel, setSelectedModel] = useState('flux-dev');
+      const [selectedStyle, setSelectedStyle] = useState('');
+      const [prompt, setPrompt] = useState('');
+      const [negativePrompt, setNegativePrompt] = useState('');
+      const [width, setWidth] = useState(1024);
+      const [height, setHeight] = useState(1024);
+      const [cfg, setCfg] = useState(7.5);
+      const [steps, setSteps] = useState(30);
+      const [seed, setSeed] = useState('');
+      const [generating, setGenerating] = useState(false);
+      const [recentGenerations, setRecentGenerations] = useState([]);
+      const [selectedGeneration, setSelectedGeneration] = useState(null);
+      
+      useEffect(() => {
+        fetchModels();
+        fetchStyles();
+        fetchRecentGenerations();
+      }, []);
+      
+      const fetchModels = async () => {
+        try {
+          const res = await fetch(`${API_URL}/models`);
+          const data = await res.json();
+          setModels(data.models || []);
+        } catch {(err) => {}}
+      };
+      
+      const fetchStyles = async () => {
+        try {
+          const res = await fetch(`${API_URL}/styles`);
+          const data = await res.json();
+          setStyles(data.styles || []);
+        } catch {(err) => {}}
+      };
+      
+      const fetchRecentGenerations = async () => {
+        try {
+          const res = await fetch(`${API_URL}/gallery?limit=6`);
+          const data = await res.json();
+          setRecentGenerations(data.generations || []);
+        } catch {(err) => {}}
+      };
+      
+      const handleGenerate = async () => {
+        if (!prompt.trim()) {
+          showToast('Please enter a prompt', 'error');
+          return;
+        }
+        if (credits <= 0) {
+          showToast('Insufficient credits', 'error');
+          return;
+        }
+        
+        setGenerating(true);
+        try {
+          const res = await fetch(`${API_URL}/generate/text-to-image`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            },
+            body: JSON.stringify({
+              prompt, negativePrompt, model: selectedModel, width, height, cfg, steps,
+              seed: seed ? parseInt(seed) : undefined,
+              styleId: selectedStyle || undefined
+            })
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            showToast('Generation started!', 'success');
+            pollGeneration(data.generationId);
+          } else {
+            const err = await res.json();
+            showToast(err.error || 'Generation failed', 'error');
+          }
+        } catch (err) {
+          showToast('Network error', 'error');
+        }
+        setGenerating(false);
+      };
+      
+      const pollGeneration = async (id) => {
+        const interval = setInterval(async () => {
+          try {
+            const res = await fetch(`${API_URL}/generations/${id}`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+            });
+            const data = await res.json();
+            
+            if (data.generation?.status === 'completed') {
+              clearInterval(interval);
+              setSelectedGeneration(data.generation);
+              fetchRecentGenerations();
+              showToast('Image generated!', 'success');
+            } else if (data.generation?.status === 'failed') {
+              clearInterval(interval);
+              showToast('Generation failed: ' + data.generation.error, 'error');
+            }
+          } catch {(err) => {}}
+        }, 2000);
+      };
+      
+      const dimensions = [
+        { label: '1:1 Square', w: 1024, h: 1024 },
+        { label: '4:3 Landscape', w: 1024, h: 768 },
+        { label: '3:4 Portrait', w: 768, h: 1024 },
+        { label: '16:9 Widescreen', w: 1024, h: 576 },
+        { label: '9:16 Mobile', w: 576, h: 1024 },
+        { label: '21:9 Ultrawide', w: 1280, h: 544 }
+      ];
+      
+      return (
+        <div className="p-8 max-w-7xl mx-auto">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-2">Create AI Art</h2>
+            <p className="text-gray-400">Transform your imagination into stunning visuals</p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* LEFT PANEL - CONTROLS */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* PROMPT INPUT */}
+              <div className="glass-panel rounded-2xl p-6">
+                <label className="block text-sm font-medium mb-3 flex items-center gap-2">
+                  <Type size={16} className="text-purple-400" /> Prompt
+                </label>
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Describe what you want to create... (e.g., 'a futuristic city at sunset, cyberpunk style, neon lights')"
+                  className="w-full h-32 bg-black/30 rounded-xl p-4 text-white placeholder-gray-500 border border-white/10 focus:border-purple-500/50 outline-none resize-none transition-all prompt-input"
+                />
+                <button
+                  onClick={() => setNegativePrompt(negativePrompt ? '' : 'blurry, low quality, deformed, ugly, bad anatomy')}
+                  className="mt-3 text-sm text-gray-400 hover:text-purple-400 flex items-center gap-1"
+                >
+                  {negativePrompt ? 'Hide' : 'Show'} Negative Prompt
+                </button>
+                {negativePrompt !== undefined && negativePrompt !== '' && (
+                  <textarea
+                    value={negativePrompt}
+                    onChange={(e) => setNegativePrompt(e.target.value)}
+                    placeholder="Things to avoid..."
+                    className="w-full h-20 mt-3 bg-black/30 rounded-xl p-4 text-white placeholder-gray-500 border border-white/10 focus:border-purple-500/50 outline-none resize-none text-sm"
+                  />
+                )}
+              </div>
+              
+              {/* SETTINGS GRID */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* MODEL SELECTOR */}
+                <div className="glass-panel rounded-xl p-4">
+                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                    <Layers size={14} className="text-blue-400" /> Model
+                  </label>
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="w-full bg-black/30 rounded-lg p-3 text-sm border border-white/10 focus:border-purple-500/50 outline-none"
+                  >
+                    {models.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({formatCredits(m.costPerGen)} cr)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* STYLE PRESETS */}
+                <div className="glass-panel rounded-xl p-4">
+                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                    <Palette size={14} className="text-pink-400" /> Style
+                  </label>
+                  <select
+                    value={selectedStyle}
+                    onChange={(e) => setSelectedStyle(e.target.value)}
+                    className="w-full bg-black/30 rounded-lg p-3 text-sm border border-white/10 focus:border-purple-500/50 outline-none"
+                  >
+                    <option value="">No Style</option>
+                    {styles.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* DIMENSIONS */}
+              <div className="glass-panel rounded-xl p-4">
+                <label className="block text-sm font-medium mb-3 flex items-center gap-2">
+                  <ImagePlus size={14} className="text-green-400" /> Dimensions
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {dimensions.map(d => (
+                    <button
+                      key={d.label}
+                      onClick={() => { setWidth(d.w); setHeight(d.h); }}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        width === d.w && height === d.h
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-black/30 text-gray-400 hover:bg-white/10'
+                      }`}
+                    >
+                      {d.label} ({d.w}×{d.h})
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* ADVANCED CONTROLS */}
+              <div className="glass-panel rounded-xl p-4">
+                <label className="block text-sm font-medium mb-4 flex items-center gap-2">
+                  <Sliders size={14} className="text-orange-400" /> Advanced Settings
+                </label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">CFG Scale</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="15"
+                      step="0.5"
+                      value={cfg}
+                      onChange={(e) => setCfg(parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                    <span className="text-xs text-gray-400">{cfg}</span>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Steps</label>
+                    <input
+                      type="range"
+                      min="10"
+                      max="50"
+                      step="1"
+                      value={steps}
+                      onChange={(e) => setSteps(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                    <span className="text-xs text-gray-400">{steps}</span>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Seed (optional)</label>
+                    <input
+                      type="number"
+                      value={seed}
+                      onChange={(e) => setSeed(e.target.value)}
+                      placeholder="Random"
+                      className="w-full bg-black/30 rounded-lg px-2 py-1 text-xs border border-white/10"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* GENERATE BUTTON */}
+              <button
+                onClick={handleGenerate}
+                disabled={generating || !prompt.trim()}
+                className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 rounded-xl font-semibold text-lg flex items-center justify-center gap-3 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed neon-glow"
+              >
+                {generating ? (
+                  <><Loader2 className="animate-spin" /> Generating...</>
+                ) : (
+                  <><Sparkles /> Generate Image</>
+                )}
+              </button>
+            </div>
+            
+            {/* RIGHT PANEL - PREVIEW */}
+            <div className="space-y-6">
+              {/* MAIN PREVIEW */}
+              <div className="glass-panel rounded-2xl p-4 aspect-square relative overflow-hidden">
+                {selectedGeneration ? (
+                  <div className="relative w-full h-full group">
+                    <img
+                      src={selectedGeneration.imageUrl}
+                      alt={selectedGeneration.prompt}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                      <p className="text-sm text-gray-300 line-clamp-2 mb-2">{selectedGeneration.prompt}</p>
+                      <div className="flex gap-2">
+                        <button className="p-2 bg-white/20 rounded-lg hover:bg-white/30">
+                          <Download size={16} />
+                        </button>
+                        <button className="p-2 bg-white/20 rounded-lg hover:bg-white/30">
+                          <Share2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                    <Image size={64} className="mb-4 opacity-50" />
+                    <p>Your creation will appear here</p>
+                  </div>
+                )}
+                {generating && (
+                  <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-purple-500 mb-4" />
+                    <p className="text-sm text-gray-400">Creating your masterpiece...</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* RECENT GENERATIONS */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-400 mb-3">Recent Creations</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {recentGenerations.map(g => (
+                    <button
+                      key={g.id}
+                      onClick={() => setSelectedGeneration(g)}
+                      className="aspect-square rounded-xl overflow-hidden relative group"
+                    >
+                      <img
+                        src={g.imageUrl}
+                        alt={g.prompt}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                      />
+                    </button>
+                  ))}
+                  {recentGenerations.length === 0 && (
+                    <div className="col-span-2 text-center py-8 text-gray-600 text-sm">
+                      No recent generations
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // ── GALLERY PAGE ────────────────────────────────────────────────
+    function GalleryPage({ showToast }) {
+      const [generations, setGenerations] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [page, setPage] = useState(1);
+      const [hasMore, setHasMore] = useState(true);
+      const [selectedImage, setSelectedImage] = useState(null);
+      
+      useEffect(() => {
+        fetchGenerations();
+      }, [page]);
+      
+      const fetchGenerations = async () => {
+        try {
+          const res = await fetch(`${API_URL}/gallery?page=${page}&limit=20`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+          });
+          const data = await res.json();
+          setGenerations(prev => page === 1 ? data.generations : [...prev, ...data.generations]);
+          setHasMore(data.pagination?.hasMore);
+        } catch {(err) => {}}
+        setLoading(false);
+      };
+      
+      return (
+        <div className="p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-bold mb-1">My Gallery</h2>
+              <p className="text-gray-400">View and manage all your creations</p>
+            </div>
+            <button className="px-4 py-2 bg-purple-600 rounded-lg flex items-center gap-2 hover:bg-purple-700">
+              <Plus size={18} /> New Collection
+            </button>
+          </div>
+          
+          {loading && generations.length === 0 ? (
+            <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>
+          ) : generations.length === 0 ? (
+            <div className="text-center py-20">
+              <Image size={64} className="mx-auto mb-4 text-gray-600" />
+              <p className="text-gray-400">No images yet. Start creating!</p>
+            </div>
+          ) : (
+            <>
+              <div className="masonry-grid">
+                {generations.map(g => (
+                  <div key={g.id} className="masonry-item relative group generation-card cursor-pointer" onClick={() => setSelectedImage(g)}>
+                    <img
+                      src={g.imageUrl}
+                      alt={g.prompt}
+                      className="w-full rounded-xl"
+                      loading="lazy"
+                    />
+                    <div className="card-overlay absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 transition-opacity rounded-xl p-4 flex flex-col justify-end">
+                      <p className="text-sm text-gray-300 line-clamp-2 mb-2">{g.prompt}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{g.width}×{g.height}</span>
+                        <div className="flex gap-2">
+                          <button className="p-2 bg-white/10 rounded-lg hover:bg-white/20">
+                            <Download size={14} />
+                          </button>
+                          <button className="p-2 bg-white/10 rounded-lg hover:bg-white/20">
+                            <Heart size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {hasMore && (
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  className="w-full py-4 mt-8 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  Load More
+                </button>
+              )}
+            </>
+          )}
+          
+          {/* LIGHTBOX */}
+          {selectedImage && (
+            <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-8" onClick={() => setSelectedImage(null)}>
+              <button className="absolute top-6 right-6 p-2 text-white/70 hover:text-white">
+                ×
+              </button>
+              <img
+                src={selectedImage.imageUrl}
+                alt={selectedImage.prompt}
+                className="max-w-full max-h-[85vh] rounded-xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="absolute bottom-6 left-6 right-6 max-w-3xl mx-auto text-center">
+                <p className="text-lg text-gray-300 mb-2">{selectedImage.prompt}</p>
+                <p className="text-sm text-gray-500">{selectedImage.model} • {formatDate(selectedImage.createdAt)}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    // ── COLLECTIONS PAGE ────────────────────────────────────────────
+    function CollectionsPage({ showToast }) {
+      const [collections, setCollections] = useState([]);
+      const [loading, setLoading] = useState(true);
+      
+      useEffect(() => {
+        fetchCollections();
+      }, []);
+      
+      const fetchCollections = async () => {
+        try {
+          const res = await fetch(`${API_URL}/collections`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+          });
+          const data = await res.json();
+          setCollections(data.collections || []);
+        } catch {(err) => {}}
+        setLoading(false);
+      };
+      
+      return (
+        <div className="p-8">
+          <h2 className="text-3xl font-bold mb-6">Collections</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {collections.map(c => (
+              <div key={c.id} className="glass-panel rounded-xl overflow-hidden group cursor-pointer hover:border-purple-500/50 transition-colors">
+                <div className="aspect-[2/1] bg-gradient-to-br from-purple-900/50 to-pink-900/50 relative">
+                  {c.coverImage ? (
+                    <img src={c.coverImage} alt={c.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FolderOpen size={48} className="text-purple-400/50" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold mb-1">{c.name}</h3>
+                  <p className="text-sm text-gray-400 line-clamp-1">{c.description}</p>
+                  <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1"><Image size={12} /> {c.imageCount} images</span>
+                    <span className="flex items-center gap-1">{c.isPublic ? '🌐 Public' : '🔒 Private'}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* ADD NEW */}
+            <button className="glass-panel rounded-xl aspect-[3/2] flex flex-col items-center justify-center text-gray-500 hover:text-purple-400 hover:border-purple-500/50 transition-colors border-dashed border-2">
+              <Plus size={48} className="mb-2" />
+              <span>Create Collection</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
+    // ── COMMUNITY PAGE ──────────────────────────────────────────────
+    function CommunityPage({ showToast }) {
+      const [generations, setGenerations] = useState([]);
+      
+      useEffect(() => {
+        fetchCommunity();
+      }, []);
+      
+      const fetchCommunity = async () => {
+        try {
+          const res = await fetch(`${API_URL}/community?limit=48`);
+          const data = await res.json();
+          setGenerations(data.generations || []);
+        } catch {(err) => {}}
+      };
+      
+      return (
+        <div className="p-8">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-1">Community Feed</h2>
+            <p className="text-gray-400">Discover what others are creating</p>
+          </div>
+          
+          <div className="masonry-grid">
+            {generations.map(g => (
+              <div key={g.id} className="masonry-item">
+                <img
+                  src={g.imageUrl}
+                  alt={g.prompt}
+                  className="w-full rounded-xl hover:scale-[1.02] transition-transform cursor-pointer"
+                  loading="lazy"
+                />
+                <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                  <span className="text-purple-400">@{g.creator}</span>
+                  <span>•</span>
+                  <span>{formatDate(g.createdAt)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    
+    // ── MOUNT ───────────────────────────────────────────────────────
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
