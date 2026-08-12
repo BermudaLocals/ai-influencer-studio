@@ -23,34 +23,64 @@ function auth(req, res, next) {
   try { req.user = jwt.verify((req.headers.authorization||'').replace('Bearer ',''), process.env.JWT_SECRET); next(); }
   catch { res.status(401).json({ error: 'Unauthorized' }); }
 }
+// Decode the token if one is present, but don't reject when it's absent —
+// used by public list/detail routes so the SFW marketing funnel stays open
+// while adult content stays gated below.
+function optionalAuth(req, _res, next) {
+  try { req.user = jwt.verify((req.headers.authorization||'').replace('Bearer ',''), process.env.JWT_SECRET); }
+  catch { req.user = null; }
+  next();
+}
 function adminAuth(req, res, next) {
   const key = req.headers['x-admin-key'] || req.query.key;
-  if (key === process.env.AGENT_ZERO_KEY || key === 'AgentZero2025!') { next(); return; }
+  // Admin key must be set server-side AND match. The old literal fallback
+  // ('AgentZero2025!') was a permanent backdoor that survived env rotation
+  // and sat in a public repo — removed.
+  if (key && process.env.AGENT_ZERO_KEY && key === process.env.AGENT_ZERO_KEY) { next(); return; }
   try { const u = jwt.verify((req.headers.authorization||'').replace('Bearer ',''), process.env.JWT_SECRET); if(u.role==='admin'){next();}else{res.status(403).json({error:'Admin only'});} }
   catch { res.status(401).json({ error: 'Unauthorized' }); }
 }
+// Fail-closed entitlement: adult content requires an authenticated user on a
+// paid tier (or admin). No token, unknown plan, or a Starter plan → no adult.
+// The handoff rule is "Starter $49 cannot see adult, Pro $197+ unlocks them."
+const ADULT_PLANS = ['pro', 'empire', 'enterprise'];
+function isAdultEntitled(user) {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  const plan = String(user.plan || user.tier || '').toLowerCase();
+  return ADULT_PLANS.includes(plan);
+}
 
 // â”€â”€ GET ALL CREATORS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-router.get('/', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   try {
     const { content_type, niche, status = 'active' } = req.query;
+    const adultOk = isAdultEntitled(req.user);
     let q = 'SELECT id, name, niche, content_type, status, image_urls, created_at FROM creators WHERE 1=1';
     const params = [];
     if (status)       { params.push(status);       q += ` AND status=$${params.length}`; }
     if (content_type) { params.push(content_type); q += ` AND content_type=$${params.length}`; }
     if (niche)        { params.push(`%${niche}%`); q += ` AND niche ILIKE $${params.length}`; }
+    // Paywall: unless the caller is entitled, adult creators never appear —
+    // not in the default list, not via ?content_type=adult.
+    if (!adultOk) { q += ` AND content_type <> 'adult'`; }
     q += ' ORDER BY name ASC';
     const result = await pool.query(q, params);
-    res.json({ count: result.rows.length, creators: result.rows });
+    res.json({ count: result.rows.length, creators: result.rows, adult_locked: !adultOk });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // â”€â”€ GET SINGLE CREATOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM creators WHERE id=$1', [req.params.id]);
     if (!r.rows[0]) return res.status(404).json({ error: 'Creator not found' });
         const c = r.rows[0];
+    // Same paywall on the full-profile route: an adult creator's complete
+    // record (profile_data, fanvue_profile, everything) is Pro+ only.
+    if (c.content_type === 'adult' && !isAdultEntitled(req.user)) {
+      return res.status(403).json({ error: 'Upgrade to Pro to view this creator', upgrade: '/billing/upgrade' });
+    }
     function safeParse(val, fallback) {
       if (val === null || val === undefined) return fallback;
       if (typeof val === "object") return val;
